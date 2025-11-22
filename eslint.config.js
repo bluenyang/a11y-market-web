@@ -11,6 +11,7 @@ import pluginReactRefresh from 'eslint-plugin-react-refresh';
 
 // Prettier configuration for ESLint
 import prettierConfig from 'eslint-config-prettier';
+import eslintPluginJsxA11y from 'eslint-plugin-jsx-a11y';
 
 export default defineConfig([
   globalIgnores(['dist']),
