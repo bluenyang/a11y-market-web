@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 
-export const Route = createFileRoute('/admin/sellers')({
+export const Route = createFileRoute('/_admin/admin/sellers')({
   component: RouteComponent,
 });
 

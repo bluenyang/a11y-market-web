@@ -6,7 +6,7 @@ import {
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
 
-export const Route = createFileRoute('/admin')({
+export const Route = createFileRoute('/_admin/admin')({
   component: RouteComponent,
   //beforeLoad: () => {} // 사용자 하위페이지 접근 검증
 });
@@ -63,7 +63,7 @@ function RouteComponent() {
                     <Link
                       to={item.path}
                       aria-label={`${item.label} 페이지로 이동`}
-                      className={`block w-full rounded py-4 text-center text-base font-medium transition ${active ? 'bg-gray-300 font-semibold' : 'hover:bg-gray-200'}`}
+                      className={`block w-full rounded py-4 text-center text-base font-medium transition ${active ? `bg-gray-300 font-semibold` : `hover:bg-gray-200`}`}
                     >
                       {item.label}
                     </Link>

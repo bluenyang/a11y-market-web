@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import A11yOverlay from '@/components/A11y/A11yOverlay'
 
-export const Route = createFileRoute('/a11ytest')({
+export const Route = createFileRoute('/_test/a11ytest')({
   component: RouteComponent,
 })
 
