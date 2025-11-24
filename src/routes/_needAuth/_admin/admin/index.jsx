@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/_admin/admin/')({
+export const Route = createFileRoute('/_needAuth/_admin/admin/')({
   component: RouteComponent,
 });
 

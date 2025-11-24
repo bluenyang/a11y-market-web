@@ -6,7 +6,7 @@ import {
   NavigationMenuList,
 } from '@/components/ui/navigation-menu';
 
-export const Route = createFileRoute('/_admin/admin')({
+export const Route = createFileRoute('/_needAuth/_admin/admin')({
   component: RouteComponent,
   //beforeLoad: () => {} // 사용자 하위페이지 접근 검증
 });

@@ -357,6 +357,6 @@ function CartPage() {
 }
 
 // TanStack Router – /cart 경로
-export const Route = createFileRoute("/cart/")({
+export const Route = createFileRoute("/_needAuth/cart/")({
   component: CartPage,
 });

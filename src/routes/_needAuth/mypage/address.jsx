@@ -5,7 +5,7 @@ import NewAddressForm from '@/components/address/NewAddressForm';
 import AddressList from '@/components/address/AddressList';
 import { Button } from '@/components/ui/button';
 
-export const Route = createFileRoute('/mypage/address')({
+export const Route = createFileRoute('/_needAuth/mypage/address')({
   component: RouteComponent,
 });
 
@@ -122,7 +122,7 @@ function RouteComponent() {
                 // 다른 탭으로 이동하면 편집 상태 초기화
                 setEditingAddress(null);
               }}
-              className={`rounded-b-none border border-gray-300 px-4 py-2 ${activeTab === idx ? 'border-b-0 bg-white text-black' : 'bg-gray-200 text-black'} mr-1 hover:bg-transparent focus:outline-none`}
+              className={`rounded-b-none border border-gray-300 px-4 py-2 ${activeTab === idx ? `border-b-0 bg-white text-black` : `bg-gray-200 text-black`} mr-1 hover:bg-transparent focus:outline-none`}
             >
               {tab.label}
             </Button>
