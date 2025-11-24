@@ -130,7 +130,7 @@ function RouteComponent() {
         </div>
 
         <div
-          className='-mt-[1px] rounded-b-md border border-gray-300 bg-white p-4'
+          className='-mt-px rounded-b-md border border-gray-300 bg-white p-4'
           aria-label={`현재 탭: ${tabs[activeTab].label}`}
         >
           {tabs[activeTab].component}

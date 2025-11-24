@@ -219,7 +219,7 @@ function CartPage() {
                 />
 
                 {/* 썸네일 */}
-                <div className='mr-6 h-16 w-16 flex-shrink-0 bg-gray-200' />
+                <div className='mr-6 h-16 w-16 shrink-0 bg-gray-200' />
 
                 {/* 상품 정보 */}
                 <div className='flex-1'>
@@ -327,13 +327,13 @@ function CartPage() {
       <div className='flex justify-center gap-4'>
         <Button
           type='button'
-          className='min-w-[160px] px-6 py-3 text-sm'
+          className='min-w-40 px-6 py-3 text-sm'
         >
           전체 주문하기
         </Button>
         <Button
           type='button'
-          className='min-w-[160px] px-6 py-3 text-sm'
+          className='min-w-40 px-6 py-3 text-sm'
         >
           선택 주문하기
         </Button>
