@@ -35,8 +35,8 @@ function RouteComponent() {
     try {
       const resp = await authApi.login(email, password);
       const { user, accessToken, refreshToken } = resp.data;
+
       dispatch(loginSuccess({ user, accessToken, refreshToken }));
-      console.log('Login successful:', redirect);
       navigate({ to: redirect });
     } catch (err) {
       console.error('Login failed:', err);

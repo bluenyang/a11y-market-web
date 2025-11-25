@@ -17,9 +17,6 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.isLoading = false;
 
-      console.log('Storing refresh token:');
-      console.log(action.payload.refreshToken);
-
       localStorage.setItem('refreshToken', action.payload.refreshToken);
     },
     logout: (state) => {
