@@ -181,7 +181,6 @@ export default function A11yOverlay({ open, onClose }) {
                 onValueChange={(val) => {
                   setSelectedProfile(val);
                   setSelectedSubMode(null); //세부 모드 초기화
-                  dispatch(resetAll());
                 }}
               >
                 <SelectTrigger
@@ -215,8 +214,6 @@ export default function A11yOverlay({ open, onClose }) {
                     value={selectedSubMode ?? ''}
                     onValueChange={(modeId) => {
                       setSelectedSubMode(modeId);
-
-                      dispatch(resetAll());
 
                       const selectedMode = A11Y_PROFILES[selectedProfile].items.find(
                         (item) => item.id === modeId,

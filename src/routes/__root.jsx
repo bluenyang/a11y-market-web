@@ -7,6 +7,7 @@ import Footer from '@/components/layout/footer';
 import A11yButton from '@/components/A11y/A11yButton';
 import { useAuthInit } from '@/hooks/useAuthInit';
 import { Spinner } from '@/components/ui/spinner';
+import useA11yStorage from '@/hooks/useA11yStorage';
 
 export const Route = createRootRoute({
   component: Root,
@@ -14,6 +15,7 @@ export const Route = createRootRoute({
 
 function Root() {
   useAuthInit();
+  useA11yStorage();
 
   const isLoading = useSelector((state) => state.auth.isLoading);
 
