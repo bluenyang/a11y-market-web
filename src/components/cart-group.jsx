@@ -9,9 +9,9 @@ import {
 } from '@/components/ui/table';
 import { MinusIcon, PlusIcon, TrashIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from './ui/button';
-import { ButtonGroup } from './ui/button-group';
-import { Input } from './ui/input';
+import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
+import { Input } from '@/components/ui/input';
 import axiosInstance from '@/api/axiosInstance';
 
 export const CartGroup = ({ groupData, selectedItems, setSelectedItems }) => {
