@@ -1,14 +1,9 @@
 import React from 'react';
 import { createFileRoute, Outlet, Link, useRouterState } from '@tanstack/react-router';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuList,
-} from '@/components/ui/navigation-menu';
+import { motion } from 'framer-motion';
 
 export const Route = createFileRoute('/_needAuth/_mypage/mypage')({
   component: RouteComponent,
-  //beforeLoad: () => {} // 사용자 하위페이지 접근 검증
 });
 
 function RouteComponent() {
@@ -19,7 +14,10 @@ function RouteComponent() {
   /*
     { label: '메뉴명', path: '/mypage/파일명' },
   */
-  const menuItems = [{ label: '배송지 관리', path: '/mypage/address' }];
+  const menuItems = [
+    { label: '회원 정보', path: '/mypage' },
+    { label: '배송지 관리', path: '/mypage/address' },
+  ];
 
   // 내비게이션 경로 표시 상단바
   const navPathLabel = () => {
@@ -30,57 +28,48 @@ function RouteComponent() {
   };
 
   return (
-    <div className='flex min-h-screen w-full bg-gray-50'>
+    <div className='font-kakao-big flex min-h-screen w-full bg-neutral-50'>
       <aside
-        className='mt-20 flex w-48 flex-col border-r bg-white'
+        className='flex w-48 flex-col border-r bg-neutral-100 p-2'
         aria-label='마이페이지 메뉴 보조 영역'
       >
         {/* Navigation Buttons */}
-        <div className='mt-4 flex flex-col items-center'>
-          <NavigationMenu
-            orientation='vertical'
-            className='w-full'
-            aria-label='마이페이지 내비게이션'
-          >
-            <NavigationMenuList
-              className='flex w-full flex-col space-y-2 px-0'
-              aria-label='마이페이지 메뉴 목록'
-            >
-              {menuItems.map((item) => {
-                const active = currentPath === item.path;
-                return (
-                  <NavigationMenuItem
-                    key={item.path}
-                    className='w-full'
-                    aria-label={`${item.label} 페이지로 이동`}
-                  >
-                    <Link
-                      to={item.path}
-                      aria-label={`${item.label} 페이지로 이동`}
-                      className={`block w-full rounded px-6 py-4 text-center text-base font-medium transition ${active ? `bg-gray-300 font-semibold` : `hover:bg-gray-200`}`}
-                    >
-                      {item.label}
-                    </Link>
-                  </NavigationMenuItem>
-                );
-              })}
-            </NavigationMenuList>
-          </NavigationMenu>
-        </div>
+        <nav className='flex w-full max-w-full flex-col'>
+          {menuItems.map((item) => {
+            const isActive = currentPath === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`relative rounded-md px-8 py-4 text-lg font-bold transition-colors ${isActive ? 'text-neutral-900' : 'text-neutral-500 hover:text-neutral-900'} `}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId='sidebar-active-bg'
+                    className='absolute inset-0 rounded-md bg-neutral-300'
+                    style={{ zIndex: 0 }}
+                    transition={{ type: 'spring', stiffness: 530, damping: 30 }}
+                  />
+                )}
+                <span className='relative z-10'>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
       </aside>
 
       {/* Page Content */}
       <main
-        className='font-kakao-big flex flex-1 flex-col pt-20'
+        className='flex flex-1 flex-col'
         aria-label='마이페이지 내용 영역'
       >
         {/* Top NavPathLabel bar */}
-        <div className='font-kakao-big mb-4 w-full border-b border-gray-300 bg-gray-100 px-6 py-3 font-medium text-gray-800'>
+        <div className='w-full border-b border-neutral-300 bg-neutral-100 px-6 py-3 font-medium text-neutral-800'>
           {navPathLabel()}
         </div>
 
         {/* Page content */}
-        <div className='font-kakao-big flex-1 p-8'>
+        <div className='flex-1'>
           <Outlet />
         </div>
       </main>

@@ -5,7 +5,7 @@ import NewAddressForm from '@/components/address/NewAddressForm';
 import AddressList from '@/components/address/AddressList';
 import { Button } from '@/components/ui/button';
 
-export const Route = createFileRoute('/_needAuth/mypage/address')({
+export const Route = createFileRoute('/_needAuth/_mypage/mypage/address')({
   component: RouteComponent,
 });
 
