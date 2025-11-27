@@ -13,17 +13,18 @@ import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { Input } from '@/components/ui/input';
 import axiosInstance from '@/api/axiosInstance';
+import { deleteCartItems } from '@/api/cartAPI';
 
 export const CartGroup = ({ groupData, selectedItems, setSelectedItems }) => {
   const [data, setData] = useState(groupData.items);
 
-  const handleSelectItem = (itemId, isSelected) => {
+  const handleSelectItem = (item, isSelected) => {
     setSelectedItems((prevSelectedItems) => {
       const updatedSelectedItems = new Set(prevSelectedItems);
       if (isSelected) {
-        updatedSelectedItems.add(itemId);
+        updatedSelectedItems.add(item);
       } else {
-        updatedSelectedItems.delete(itemId);
+        updatedSelectedItems.delete(item);
       }
       return updatedSelectedItems;
     });
@@ -34,12 +35,22 @@ export const CartGroup = ({ groupData, selectedItems, setSelectedItems }) => {
       const updatedSelectedItems = new Set(prevSelectedItems);
       data.forEach((item) => {
         if (isSelected) {
-          updatedSelectedItems.add(item.productId);
+          updatedSelectedItems.add(item);
         } else {
-          updatedSelectedItems.delete(item.productId);
+          updatedSelectedItems.delete(item);
         }
       });
       return updatedSelectedItems;
+    });
+  };
+
+  const handleChangeQuantity = async (index, cartItemId, amount) => {
+    const newData = [...data];
+    newData[index].quantity += amount;
+    setData(newData);
+
+    axiosInstance.patch(`/v1/cart/items/${cartItemId}`, {
+      quantity: newData[index].quantity,
     });
   };
 
@@ -47,20 +58,15 @@ export const CartGroup = ({ groupData, selectedItems, setSelectedItems }) => {
     const newData = [...data];
     const removedItems = newData.splice(index, 1);
     setData(newData);
-
-    axiosInstance.delete(`/v1/cart/items`, {
-      data: {
-        itemIds: removedItems.map((item) => item.cartItemId),
-      },
-    });
+    deleteCartItems(removedItems);
   };
 
   useEffect(() => {
     data.forEach((item) => {
-      if (!selectedItems.has(item.productId)) {
+      if (!selectedItems.has(item)) {
         setSelectedItems((prevSelectedItems) => {
           const updatedSelectedItems = new Set(prevSelectedItems);
-          updatedSelectedItems.add(item.productId);
+          updatedSelectedItems.add(item);
           return updatedSelectedItems;
         });
       }
@@ -74,7 +80,7 @@ export const CartGroup = ({ groupData, selectedItems, setSelectedItems }) => {
           <TableRow>
             <TableHead className='w-[5%] py-4 text-center'>
               <Checkbox
-                checked={data.every((item) => selectedItems.has(item.productId))}
+                checked={data.every((item) => selectedItems.has(item))}
                 onCheckedChange={handleSelectAll}
                 className='size-6'
               />
@@ -102,8 +108,8 @@ export const CartGroup = ({ groupData, selectedItems, setSelectedItems }) => {
             <TableRow key={item.cartItemId}>
               <TableCell className='w-[5%] text-center'>
                 <Checkbox
-                  checked={selectedItems.has(item.productId)}
-                  onCheckedChange={(isSelected) => handleSelectItem(item.productId, isSelected)}
+                  checked={selectedItems.has(item)}
+                  onCheckedChange={(isSelected) => handleSelectItem(item, isSelected)}
                   className='size-6'
                 />
               </TableCell>
@@ -124,17 +130,7 @@ export const CartGroup = ({ groupData, selectedItems, setSelectedItems }) => {
                   <Button
                     variant='outline'
                     className='w-8'
-                    onClick={() => {
-                      if (item.quantity > 1) {
-                        const newData = [...data];
-                        newData[index].quantity -= 1;
-                        setData(newData);
-
-                        axiosInstance.patch(`/v1/cart/items/${item.cartItemId}`, {
-                          quantity: newData[index].quantity,
-                        });
-                      }
-                    }}
+                    onClick={() => handleChangeQuantity(index, item.cartItemId, -1)}
                   >
                     <MinusIcon className='size-4' />
                   </Button>
@@ -146,15 +142,7 @@ export const CartGroup = ({ groupData, selectedItems, setSelectedItems }) => {
                   <Button
                     variant='outline'
                     className='w-8'
-                    onClick={() => {
-                      const newData = [...data];
-                      newData[index].quantity += 1;
-                      setData(newData);
-
-                      axiosInstance.patch(`/v1/cart/items/${item.cartItemId}`, {
-                        quantity: newData[index].quantity,
-                      });
-                    }}
+                    onClick={() => handleChangeQuantity(index, item.cartItemId, 1)}
                   >
                     <PlusIcon className='size-4' />
                   </Button>

@@ -3,9 +3,10 @@
 import axiosInstance from './axiosInstance';
 
 //결제 전 주문 정보 조회
-export async function getCheckoutInfo(orderItemIds) {
-  const response = await axiosInstance.post('/api/v1/orders/pre-check', {
+export async function getCheckoutInfo(orderItemIds, orderAllItems = false) {
+  const response = await axiosInstance.post('/v1/orders/pre-check', {
     checkoutItemIds: orderItemIds,
+    orderAllItems,
   });
 
   if (response.status === 200) {
@@ -17,7 +18,7 @@ export async function getCheckoutInfo(orderItemIds) {
 
 // 주문 생성
 export async function createOrder(addressId, orderItemIds) {
-  const response = await axiosInstance.post('/api/v1/orders', {
+  const response = await axiosInstance.post('/v1/orders', {
     addressId,
     orderItemIds,
   });
