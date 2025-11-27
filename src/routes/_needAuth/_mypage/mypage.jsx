@@ -17,6 +17,7 @@ function RouteComponent() {
   const menuItems = [
     { label: '회원 정보', path: '/mypage' },
     { label: '배송지 관리', path: '/mypage/address' },
+    { label: '회원 정보 수정', path: '/mypage/editProfile' },
   ];
 
   // 내비게이션 경로 표시 상단바
