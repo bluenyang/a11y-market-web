@@ -131,7 +131,7 @@ function CartPage() {
             disabled={selectedItems.size === 0}
             onClick={() => {
               navigate({
-                to: '/_needAuth/order/new',
+                to: '/order/checkout',
                 search: (old) => ({
                   ...old,
                   from: 'cart',
@@ -148,11 +148,13 @@ function CartPage() {
             disabled={selectedItems.size === 0}
             onClick={() => {
               navigate({
-                to: '/_needAuth/order/new',
+                to: '/order/checkout',
                 search: (old) => ({
                   ...old,
                   from: 'cart',
-                  itemIds: Array.from(selectedItems).join(','),
+                  itemIds: Array.from(
+                    cartGroups.items.flatMap((group) => group.items.map((item) => item.cartItemId)),
+                  ).join(','),
                 }),
               });
             }}
