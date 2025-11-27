@@ -166,7 +166,6 @@ function RouteComponent() {
         ) : (
           <div className='flex flex-col gap-4'>
             {orderList?.map((order) => {
-              console.log(order);
               return (
                 <Item
                   key={order.orderId}

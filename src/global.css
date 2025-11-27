@@ -124,8 +124,8 @@
   font-weight: 400;
   font-style: normal;
   src:
-    url('/fonts/kakao-big-sans/KakaoBig.woff2') format('woff2'),
-    url('/fonts/kakao-big-sans/KakaoBig.woff') format('woff');
+    url('/fonts/kakao-big-sans/woff2/KakaoBigSans-Regular.woff2') format('woff2'),
+    url('/fonts/kakao-big-sans/woff/KakaoBigSans-Regular.woff') format('woff');
 }
 
 @font-face {
@@ -133,8 +133,8 @@
   font-weight: 700;
   font-style: normal;
   src:
-    url('/fonts/kakao-big-sans/KakaoBig-Bold.woff2') format('woff2'),
-    url('/fonts/kakao-big-sans/KakaoBig-Bold.woff') format('woff');
+    url('/fonts/kakao-big-sans/woff2/KakaoBigSans-Bold.woff2') format('woff2'),
+    url('/fonts/kakao-big-sans/woff/KakaoBigSans-Bold.woff') format('woff');
 }
 
 @font-face {
@@ -142,38 +142,38 @@
   font-weight: 800;
   font-style: normal;
   src:
-    url('/fonts/kakao-big-sans/KakaoBig-ExtraBold.woff2') format('woff2'),
-    url('/fonts/kakao-big-sans/KakaoBig-ExtraBold.woff') format('woff');
+    url('/fonts/kakao-big-sans/woff2/KakaoBigSans-ExtraBold.woff2') format('woff2'),
+    url('/fonts/kakao-big-sans/woff/KakaoBigSans-ExtraBold.woff') format('woff');
 }
 
 @font-face {
-  font-family: 'KakaoLittle';
+  font-family: 'KakaoSmall';
   font-weight: 400;
   font-style: normal;
   src:
-    url('/fonts/kakao-little-sans/KakaoLittle.woff2') format('woff2'),
-    url('/fonts/kakao-little-sans/KakaoLittle.woff') format('woff');
+    url('/fonts/kakao-little-sans/woff2/KakaoSmallSans-Regular.woff2') format('woff2'),
+    url('/fonts/kakao-little-sans/woff/KakaoSmallSans-Regular.woff') format('woff');
 }
 
 @font-face {
-  font-family: 'KakaoLittle';
+  font-family: 'KakaoSmall';
   font-weight: 700;
   font-style: normal;
   src:
-    url('/fonts/kakao-little-sans/KakaoLittle-Bold.woff2') format('woff2'),
-    url('/fonts/kakao-little-sans/KakaoLittle-Bold.woff') format('woff');
+    url('/fonts/kakao-little-sans/woff2/KakaoSmallSans-Bold.woff2') format('woff2'),
+    url('/fonts/kakao-little-sans/woffKakaoSmallSans-Bold.woff') format('woff');
 }
 
 @font-face {
-  font-family: 'KakaoLittle';
+  font-family: 'KakaoSmall';
   font-weight: 800;
   font-style: normal;
   src:
-    url('/fonts/kakao-little-sans/KakaoLittle-ExtraBold.woff2') format('woff2'),
-    url('/fonts/kakao-little-sans/KakaoLittle-ExtraBold.woff') format('woff');
+    url('/fonts/kakao-little-sans/woff2/KakaoSmallSans-ExtraBold.woff2') format('woff2'),
+    url('/fonts/kakao-little-sans/woff/KakaoSmallSans-ExtraBold.woff') format('woff');
 }
 
 @theme font {
   --font-kakao-big: 'KakaoBig', sans-serif;
-  --font-kakao-little: 'KakaoLittle', sans-serif;
+  --font-kakao-small: 'KakaoSmall', sans-serif;
 }

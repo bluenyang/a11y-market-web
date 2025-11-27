@@ -444,6 +444,6 @@ function SellerProductNewPage() {
 }
 
 // TanStack Router – /seller/products/new 경로
-export const Route = createFileRoute('/seller/products/new')({
+export const Route = createFileRoute('/_needAuth/seller/products/new')({
   component: SellerProductNewPage,
 });

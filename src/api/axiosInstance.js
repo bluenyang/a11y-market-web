@@ -73,6 +73,7 @@ axiosInstance.interceptors.response.use(
         }
       }
       // ... 다른 상태 코드에 대한 공통 처리 추가 가능
+      return Promise.reject(err.response.data);
     }
     return Promise.reject(err);
   },

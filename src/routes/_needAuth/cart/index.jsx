@@ -1,9 +1,16 @@
 // src/routes/cart.jsx
-import React, { useEffect, useState } from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Icon } from '@iconify/react';
+import { getCartItems } from '@/api/cartAPI';
+import { getCheckoutInfo } from '@/api/orderAPI';
+import { CartGroup } from '@/components/cart-group';
+import { Alert, AlertTitle } from '@/components/ui/alert';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import axiosInstance from '@/api/axiosInstance';
+import { Card } from '@/components/ui/card';
 import {
   Empty,
   EmptyContent,
@@ -12,56 +19,119 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
-import { CartGroup } from '@/components/cart-group';
-import { Card } from '@/components/ui/card';
 import { Item } from '@/components/ui/item';
+import { Spinner } from '@/components/ui/spinner';
+import { setOrderItems } from '@/store/orderSlice';
+import { Icon } from '@iconify/react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { AlertCircleIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+
+export const Route = createFileRoute('/_needAuth/cart/')({
+  component: CartPage,
+});
 
 function CartPage() {
   const [cartGroups, setCartGroups] = useState([]);
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [totalPrice, setTotalPrice] = useState(0);
+  const [submitType, setSubmitType] = useState('none');
+  const [err, setErr] = useState(null);
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // --- 체크박스 & 수량 변경 로직 ---
+  const handleOrder = async (type) => {
+    setSubmitType(type);
+
+    const options = {
+      selectedItems: Array.from(selectedItems).map((item) => item.cartItemId),
+      orderAllItems: type === 'all',
+    };
+
+    // 주문이 가능한지 확인
+    try {
+      const checkData = await getCheckoutInfo(options.selectedItems, options.orderAllItems);
+
+      if (checkData.status === 'OUT_OF_STOCK') {
+        setErr('재고가 부족한 상품이 있습니다.');
+        setSubmitType('none');
+        return;
+      } else if (checkData.totalAmount !== totalPrice) {
+        setErr('선택된 상품의 가격이 일치하지 않습니다. 새로고침 후 다시 시도해주세요.');
+        setSubmitType('none');
+        return;
+      }
+
+      dispatch(setOrderItems(Array.from(selectedItems)));
+      navigate({
+        to: '/order/checkout',
+      });
+    } catch (e) {
+      setErr(e.message);
+      setSubmitType('none');
+      return;
+    }
+  };
 
   useEffect(() => {
     const fetchCartData = async () => {
-      const resp = await axiosInstance.get('/v1/cart/me');
-      setCartGroups(resp.data);
-      setTotalPrice(resp.data.total || 0);
-    };
+      const data = await getCartItems();
+      // const data = {
+      //   items: [],
+      // };
 
+      setCartGroups(data);
+      setTotalPrice(data.total || 0);
+    };
     fetchCartData();
   }, []);
+
+  useEffect(() => {
+    if (selectedItems.size === 0 || !cartGroups.items) {
+      setTotalPrice(0);
+      return;
+    }
+
+    const calculateTotalPrice = () => {
+      const filteredItems = Array.from(selectedItems);
+
+      const total = filteredItems?.reduce((acc, item) => {
+        return acc + item.productPrice * item.quantity;
+      }, 0);
+
+      setTotalPrice(total);
+    };
+    calculateTotalPrice();
+  }, [cartGroups, selectedItems]);
 
   const getContent = () => {
     if (!cartGroups.items || cartGroups.items.length === 0) {
       return (
-        <div className='mx-40 flex h-fit flex-col items-center justify-center py-8'>
+        <div className='flex h-fit flex-col items-center justify-center py-8'>
           <Empty>
             <EmptyHeader>
-              <EmptyMedia variant='icon'>
+              <EmptyMedia
+                variant='icon'
+                className='mb-0 flex size-24 rounded-full bg-neutral-200'
+              >
                 <Icon
                   icon='mdi:cart'
-                  className='h-8 w-8'
+                  className='mt-1.5 ml-1 size-16'
                 />
               </EmptyMedia>
-              <EmptyTitle>장바구니가 비어있습니다.</EmptyTitle>
-              <EmptyDescription>
+              <EmptyTitle className='text-3xl font-bold'>장바구니가 비어있습니다</EmptyTitle>
+              <EmptyDescription className='text-lg'>
                 아직 장바구니에 담긴 상품이 없습니다. 마음에 드는 상품을 담아보세요!
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <div className='flex gap-2'>
+              <div className='flex gap-4'>
                 <Button
                   variant='default'
+                  className='h-10 w-40 text-lg font-bold transition-all hover:-translate-y-0.5 hover:shadow-md'
                   onClick={() => {
                     navigate({ to: '/products' });
                   }}
@@ -70,6 +140,7 @@ function CartPage() {
                 </Button>
                 <Button
                   variant='outline'
+                  className='h-10 w-40 text-lg font-bold transition-all hover:-translate-y-0.5 hover:shadow-md'
                   onClick={() => {
                     navigate({ to: '/' });
                   }}
@@ -83,21 +154,102 @@ function CartPage() {
       );
     } else {
       return (
-        <div className='mx-40 flex py-8'>
-          {cartGroups.items.map((groupData) => (
-            <CartGroup
-              key={groupData.sellerId}
-              groupData={groupData}
-              selectedItems={selectedItems}
-              setSelectedItems={setSelectedItems}
-            />
-          ))}
-        </div>
+        <>
+          <section className='flex py-8'>
+            {cartGroups.items.map((groupData) => (
+              <CartGroup
+                key={groupData.sellerId}
+                groupData={groupData}
+                selectedItems={selectedItems}
+                setSelectedItems={setSelectedItems}
+              />
+            ))}
+          </section>
+          <section className='w-full'>
+            <Alert
+              variant='destructive'
+              className={`border-red-500 bg-red-500/70 text-white ${err ? 'mb-8 grid-rows-[1fr]' : 'mb-0 grid-rows-[0fr] p-0 opacity-0'} transition-all`}
+            >
+              <AlertCircleIcon className={`${err ? '' : 'hidden'}`} />
+              <AlertTitle className={`${err ? '' : 'hidden'}`}>{err}</AlertTitle>
+            </Alert>
+          </section>
+          <section className='w-full'>
+            <Card className='bg-neutral-100 p-4'>
+              <Item className='flex flex-col items-end gap-4'>
+                <div className='flex flex-col items-end gap-2'>
+                  <span className='text-muted-foreground text-sm'>선택된 상품</span>
+                  <span className='text-lg font-bold'>{selectedItems.size.toLocaleString()}개</span>
+                  <span className='text-muted-foreground text-sm'>총 상품 금액</span>
+                  <span className='text-2xl font-bold'>
+                    {totalPrice ? totalPrice.toLocaleString() : 0}원
+                  </span>
+                </div>
+              </Item>
+            </Card>
+            <Item className='mb-8 flex flex-col justify-center gap-4 md:flex-row md:items-center'>
+              <Button
+                variant='outline'
+                className='w-full px-16 py-6 text-lg font-bold md:w-auto'
+                disabled={selectedItems.size === 0 || submitType !== 'none'}
+                onClick={() => {
+                  handleOrder('partial');
+                  // navigate({
+                  //   to: '/order/checkout',
+                  //   search: (old) => ({
+                  //     ...old,
+                  //     from: 'cart',
+                  //     itemIds: Array.from(selectedItems).join(','),
+                  //   }),
+                  // });
+                }}
+              >
+                {submitType === 'partial' ? (
+                  <span className='flex items-center gap-2'>
+                    선택상품 주문
+                    <Spinner />
+                  </span>
+                ) : (
+                  '선택상품 주문하기'
+                )}
+              </Button>
+              <Button
+                variant='default'
+                className='w-full px-16 py-6 text-lg font-bold md:w-auto'
+                disabled={selectedItems.size === 0 || submitType !== 'none'}
+                onClick={() => {
+                  handleOrder('all');
+                  // navigate({
+                  //   to: '/order/checkout',
+                  //   search: (old) => ({
+                  //     ...old,
+                  //     from: 'cart',
+                  //     itemIds: Array.from(
+                  //       cartGroups.items.flatMap((group) =>
+                  //         group.items.map((item) => item.cartItemId),
+                  //       ),
+                  //     ).join(','),
+                  //   }),
+                  // });
+                }}
+              >
+                {submitType === 'all' ? (
+                  <span className='flex items-center gap-2'>
+                    전체상품 주문
+                    <Spinner />
+                  </span>
+                ) : (
+                  '전체상품 주문하기'
+                )}
+              </Button>
+            </Item>
+          </section>
+        </>
       );
     }
   };
   return (
-    <main className='font-kakao-big font-bold'>
+    <main className='font-kakao-big mx-auto max-w-4xl font-bold'>
       <header className='flex flex-col justify-center gap-4 border-b px-40 py-4'>
         <h1 className='text-center text-2xl'>장바구니</h1>
         <Breadcrumb className='flex justify-center'>
@@ -110,62 +262,7 @@ function CartPage() {
           </BreadcrumbList>
         </Breadcrumb>
       </header>
-      <section className='min-h-[60vh]'>
-        {getContent()}
-        <Card className='mx-40 bg-neutral-100 p-4'>
-          <Item className='flex flex-col items-end gap-4'>
-            <div className='flex flex-col items-end gap-2'>
-              <span className='text-muted-foreground text-sm'>선택된 상품</span>
-              <span className='text-lg font-bold'>{selectedItems.size.toLocaleString()}개</span>
-              <span className='text-muted-foreground text-sm'>총 상품 금액</span>
-              <span className='text-2xl font-bold'>
-                {totalPrice ? totalPrice.toLocaleString() : 0}원
-              </span>
-            </div>
-          </Item>
-        </Card>
-        <Item className='mx-40 mb-8 flex justify-center gap-4'>
-          <Button
-            variant='outline'
-            className='px-16 py-6 text-lg font-bold'
-            disabled={selectedItems.size === 0}
-            onClick={() => {
-              navigate({
-                to: '/_needAuth/order/new',
-                search: (old) => ({
-                  ...old,
-                  from: 'cart',
-                  itemIds: Array.from(selectedItems).join(','),
-                }),
-              });
-            }}
-          >
-            선택상품 주문하기
-          </Button>
-          <Button
-            variant='default'
-            className='px-16 py-6 text-lg font-bold'
-            disabled={selectedItems.size === 0}
-            onClick={() => {
-              navigate({
-                to: '/_needAuth/order/new',
-                search: (old) => ({
-                  ...old,
-                  from: 'cart',
-                  itemIds: Array.from(selectedItems).join(','),
-                }),
-              });
-            }}
-          >
-            전체상품 주문하기
-          </Button>
-        </Item>
-      </section>
+      {getContent()}
     </main>
   );
 }
-
-// TanStack Router – /cart 경로
-export const Route = createFileRoute('/_needAuth/cart/')({
-  component: CartPage,
-});
