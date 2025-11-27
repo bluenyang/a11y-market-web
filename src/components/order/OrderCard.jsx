@@ -17,10 +17,10 @@ export default function OrderCard({ order }) {
   return (
     <Card>
       <CardHeader className='flex justify-end'>
-        <OrderStatusBadge status={order?.status} />
+        <OrderStatusBadge status={order?.orderStatus} />
       </CardHeader>
 
-      <CardContent className='space-y-2 text-sm'>
+      <CardContent className='space-y-2'>
         {order.orderItems?.map((item) => (
           <div
             key={item.orderItemId}
@@ -42,13 +42,17 @@ export default function OrderCard({ order }) {
               <div className='space-y-1'>
                 <p className='font-semibold'>{item.productName}</p>
                 <p className='text-gray-600'>
-                  가격: {item.productPrice.toLocaleString()}원 | 수량: {item.productQuantity}
+                  가격:{' '}
+                  {typeof item.productPrice === 'number' ? item.productPrice.toLocaleString() : '-'}
+                  원 | 수량: {item.productQuantity}
                 </p>
                 <p className='text-gray-600'>
                   총액: {(item.productPrice * item.productQuantity).toLocaleString()}원
                 </p>
-                <p> {/* 상품별 상태 : 개발 중 */}
-                  상태: <OrderStatusBadge status={order?.status || 'PENDING'} />
+                <p>
+                  {' '}
+                  {/* 상품별 상태 : 개발 중 */}
+                  상태: <OrderStatusBadge status={order?.orderStatus || 'PENDING'} />
                 </p>
               </div>
             </div>
@@ -61,12 +65,12 @@ export default function OrderCard({ order }) {
       <CardFooter className='flex flex-col items-start gap-4'>
         <button
           onClick={() => setOpen((prev) => !prev)}
-          className='text-base font-semibold underline'
+          className='font-semibold underline'
         >
           {open ? '상세 닫기 ▲' : '상세 보기 ▼'}
         </button>
         {open && (
-          <div className='mt-4 w-full space-y-2 rounded-lg p-4 text-base'>
+          <div className='mt-4 w-full space-y-2 rounded-lg p-4'>
             <p>주문번호: {order.orderId}</p>
             <p>수령인: {order.receiverName}</p>
             <p>연락처: {formatPhone(order.receiverPhone)}</p>

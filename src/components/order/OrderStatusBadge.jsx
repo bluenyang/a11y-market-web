@@ -3,9 +3,10 @@ import { Badge } from '@/components/ui/badge';
 const statusVariant = {
   PENDING: 'secondary',
   PAID: 'default',
-  SHIPPING: 'outline',
+  ACCEPTED: 'warning',
+  SHIPPED: 'outline',
   DELIVERED: 'success',
-  CANCELED: 'destructive',
+  CANCELLED: 'destructive',
 };
 
 export default function OrderStatusBadge({ status }) {

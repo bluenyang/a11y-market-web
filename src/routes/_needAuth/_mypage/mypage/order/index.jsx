@@ -45,15 +45,20 @@ export default function OrderHistoryPage() {
     fetchOrders();
   }, []);
 
+  console.log(orders.map(o => o.status));
+  console.log(Object.keys(orders[0] || {}));
+
   // 필터 (개발 중)
   const filteredOrders = orders
     .filter((order) => {
       if (statusFilter === 'ALL') return true;
-      return order.status === statusFilter;
+      return order.orderStatus === statusFilter;
     })
     .filter((order) => {
       if (!searchKeyword) return true;
-      return order.orderId?.includes(searchKeyword) || order.receiverName?.includes(searchKeyword);
+      return order.orderId?.includes(searchKeyword) || order.receiverName?.includes(searchKeyword) ||  order.orderItems?.some(item =>
+      item.productName?.includes(searchKeyword)
+  )
     });
 
   // 정렬
@@ -87,7 +92,7 @@ export default function OrderHistoryPage() {
           {[
             { label: '입금대기', key: 'PENDING' },
             { label: '결제완료', key: 'PAID' },
-            { label: '배송준비', key: 'ACCEPTED' },
+            { label: '상품 준비중', key: 'ACCEPTED' },
             { label: '배송중', key: 'SHIPPED' },
             { label: '배송완료', key: 'DELIVERED' },
             { label: '취소/환불', key: 'CANCELLED' },
@@ -99,7 +104,7 @@ export default function OrderHistoryPage() {
               <div className='flex flex-col gap-4'>
                 <span className='text-md'>{item.label}</span>
                 <span className='text-xl font-bold text-blue-600'>
-                  {orders.filter((o) => o.status === item.key).length}
+                  {orders.filter((o) => o.orderStatus === item.key).length}
                 </span>
               </div>
 
@@ -126,10 +131,10 @@ export default function OrderHistoryPage() {
               <option value='ALL'>전체</option>
               <option value='PENDING'>입금대기</option>
               <option value='PAID'>결제완료</option>
-              <option value='ACCEPTED'>배송준비</option>
+              <option value='ACCEPTED'>상품 준비중</option>
               <option value='SHIPPED'>배송중</option>
               <option value='DELIVERED'>배송완료</option>
-              <option value='CANCELED'>취소</option>
+              <option value='CANCELLED'>취소</option>
             </select>
 
             <select
@@ -203,7 +208,7 @@ export default function OrderHistoryPage() {
           })}
 
         {/* 페이지네이션 */}
-        {!loading && !error && sortedOrders.length > ITEMS_PER_PAGE && (
+        {!loading && !error &&  (
           <OrderPagination
             currentPage={currentPage}
             totalPages={Math.ceil(sortedOrders.length / ITEMS_PER_PAGE)}
