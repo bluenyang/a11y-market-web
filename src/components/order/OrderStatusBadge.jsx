@@ -1,15 +1,15 @@
 import { Badge } from '@/components/ui/badge';
 
-const statusvariant = {
+const statusVariant = {
   PENDING: 'secondary',
   PAID: 'default',
   SHIPPING: 'outline',
   DELIVERED: 'success',
-  CANCELLED: 'destructive',
+  CANCELED: 'destructive',
 };
 
 export default function OrderStatusBadge({ status }) {
-  const style = statusStyle[status] || 'secondary';
+  const variant = statusVariant[status] || 'secondary';
 
   return <Badge variant={variant}>{status}</Badge>;
 }
