@@ -16,7 +16,7 @@ on:
 jobs:
   cleanup:
     name: Cleanup PR Deployment
-    runs-on: self-hosted
+    runs-on: [self-hosted, fe, qa]
 
     steps:
       - name: Set dynamic variables

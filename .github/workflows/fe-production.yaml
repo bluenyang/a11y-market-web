@@ -1,18 +1,21 @@
-name: FE | Staging - Build and Deploy
+name: FE | Production - Build and Deploy
 
 on:
   push:
     branches:
-      - develop
+      - master
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
 
 concurrency:
-  group: '${{ github.workflow }}-staging'
+  group: '${{ github.workflow }}-production'
   cancel-in-progress: true
 
 env:
   # GitHub Container Registry
   IMAGE_NAME: ghcr.io/${{ secrets.GHCR_USER }}/${{ github.event.repository.name }}
+  IMAGE_TAG: ghcr.io/${{ secrets.GHCR_USER }}/${{ github.event.repository.name }}:${{ github.ref_name }}
 
 jobs:
   build-and-push:
@@ -26,7 +29,7 @@ jobs:
 
     steps:
       - name: Notify build Start
-        run: echo "### Staging 서버 빌드 및 테스트 시작" >> $GITHUB_STEP_SUMMARY
+        run: echo "### Production 서버 빌드 및 테스트 시작" >> $GITHUB_STEP_SUMMARY
         shell: bash
 
       - name: Checkout code
@@ -39,7 +42,7 @@ jobs:
           cache: 'npm'
 
       - name: Create .env file
-        run: echo "${{ secrets.FE_ENV_STAGING }}" > .env
+        run: echo "${{ secrets.FE_ENV_PRODUCTION }}" > .env
 
       - name: Install dependencies
         run: npm ci
@@ -63,7 +66,7 @@ jobs:
           context: .
           file: .docker/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}:staging
+          tags: ${{ env.IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -76,10 +79,10 @@ jobs:
     env:
       TEAM_USER: ${{ secrets.TEAM_USER }}
       TEAM_PASS: ${{ secrets.TEAM_PASS }}
-      ENVIRONMENT_FILE: ${{ secrets.FE_ENV_STAGING }}
-      HOST_NAME: ${{ secrets.STAGING_DOMAIN }}
-      SERVICE_NAME: fe-staging
-      DEPLOY_PATH: ${{ secrets.DOCKER_DIR }}/deployments/fe-staging
+      ENVIRONMENT_FILE: ${{ secrets.FE_ENV_PRODUCTION }}
+      HOST_NAME: ${{ secrets.PRODUCTION_DOMAIN }}
+      SERVICE_NAME: fe-production
+      DEPLOY_PATH: ${{ secrets.AWS_DOCKER_DIR }}/deployments/fe-production
 
     steps:
       - name: Checkout code
@@ -87,7 +90,7 @@ jobs:
 
       - name: Set variables
         run: |
-          echo "IMAGE_TAG=${{ env.IMAGE_NAME }}:staging" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
 
       - name: Create compose file from template
         run: |
@@ -104,22 +107,22 @@ jobs:
         run: |
           set -e
 
-          mkdir -p ${{ secrets.DOCKER_DIR }}/deployments/fe-staging
+          mkdir -p ${{ secrets.AWS_DOCKER_DIR }}/deployments/fe-production
 
           # write compose file from runner
           echo "[LOG] build compose file ..."
-          cat <<'EOF' > ${{ secrets.DOCKER_DIR }}/deployments/fe-staging/docker-compose.yaml
+          cat <<'EOF' > ${{ secrets.AWS_DOCKER_DIR }}/deployments/fe-production/docker-compose.yaml
           ${{ env.COMPOSE_CONTENT }}
           EOF
 
           # Write application.yaml
           echo "[LOG] build application.yaml ..."
-          cat <<'EOF' > ${{ secrets.DOCKER_DIR }}/deployments/fe-staging/.env
+          cat <<'EOF' > ${{ secrets.AWS_DOCKER_DIR }}/deployments/fe-production/.env
           ${{ env.ENVIRONMENT_FILE }}
           EOF
 
           # change dir into deploy path
-          cd ${{ secrets.DOCKER_DIR }}/deployments/fe-staging
+          cd ${{ secrets.AWS_DOCKER_DIR }}/deployments/fe-production
 
           # login ghcr
           echo "[LOG] log-in Github container registry"
@@ -127,11 +130,11 @@ jobs:
 
           # pull docker image
           echo "[LOG] pull docker image"
-          docker pull ${{ env.IMAGE_NAME }}:staging
+          docker pull ${{ env.IMAGE_TAG }}
 
           # up docker compose
           echo "[LOG] docker container up"
-          docker compose -f docker-compose.yaml -p fe-staging up -d --remove-orphans
+          docker compose -f docker-compose.yaml -p fe-production up -d --remove-orphans
 
           # prune unnecessary image
           docker image prune -f
@@ -139,7 +142,7 @@ jobs:
       - name: 🚀 Notify Deployment Success
         if: success() # When previous step finished completely
         run: |
-          echo "### ✅ Staging 서버 배포 성공" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Production 서버 배포 성공" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Staging 서버가 성공적으로 배포되었습니다." >> $GITHUB_STEP_SUMMARY
+          echo "Production 서버가 성공적으로 배포되었습니다." >> $GITHUB_STEP_SUMMARY
         shell: bash

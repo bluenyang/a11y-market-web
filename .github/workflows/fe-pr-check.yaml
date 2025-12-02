@@ -25,7 +25,7 @@ env:
 
 jobs:
   pre-comment:
-    runs-on: self-hosted
+    runs-on: [self-hosted, fe, qa]
 
     steps:
       - name: Add PR comment
@@ -44,7 +44,7 @@ jobs:
   build-and-push:
     name: Build, Test and Push Image
     # Using self-hosted runner
-    runs-on: self-hosted
+    runs-on: [self-hosted, fe, qa]
     needs: pre-comment
     outputs:
       # To use next job(deploy)
@@ -98,7 +98,7 @@ jobs:
   deploy:
     name: Deploy to PR Server
     needs: build-and-push
-    runs-on: self-hosted
+    runs-on: [self-hosted, fe, qa]
 
     # Set output and secrets received through needs as global variables
     env:
@@ -170,7 +170,7 @@ jobs:
     needs:
       - build-and-push
       - deploy
-    runs-on: self-hosted
+    runs-on: [self-hosted, fe, qa]
     env:
       PR_NUMBER: ${{ needs.build-and-push.outputs.pr_number }}
       QA_DOMAIN: ${{ secrets.QA_DOMAIN }}

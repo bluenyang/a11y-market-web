@@ -1,14 +1,14 @@
-name: FE | Staging - Cleanup
+name: FE | Production - Cleanup
 on:
   workflow_dispatch:
 
 env:
-  SERVICE_NAME: fe-staging
-  DEPLOY_PATH: ${{ secrets.DOCKER_DIR }}/deployments/fe-staging
+  SERVICE_NAME: fe-production
+  DEPLOY_PATH: ${{ secrets.DOCKER_DIR }}/deployments/fe-production
 
 jobs:
   cleanup:
-    name: Cleanup Staging Deployment
+    name: Cleanup Production Deployment
     runs-on: [self-hosted, fe, qa]
 
     steps:
@@ -17,7 +17,7 @@ jobs:
           export SERVICE_NAME=${{ env.SERVICE_NAME }}
           export DEPLOY_PATH=${{ env.DEPLOY_PATH }}
             
-          echo "[LOG] Attempting to cleanup staging project: $SERVICE_NAME"
+          echo "[LOG] Attempting to cleanup production project: $SERVICE_NAME"
           docker stop "$SERVICE_NAME" || echo "[LOG] Container $SERVICE_NAME not found or already stopped."
           docker rm "$SERVICE_NAME" || echo "[LOG] Container $SERVICE_NAME not found or already removed."
             
