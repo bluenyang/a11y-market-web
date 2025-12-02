@@ -2,6 +2,10 @@ name: FE | Production - Cleanup
 on:
   workflow_dispatch:
 
+concurrency:
+  group: '${{ github.workflow }}-production'
+  cancel-in-progress: true
+
 env:
   SERVICE_NAME: fe-production
   DEPLOY_PATH: ${{ secrets.DOCKER_DIR }}/deployments/fe-production
