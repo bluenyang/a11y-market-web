@@ -48,40 +48,35 @@ function RouteComponent() {
             <TableRow className='hover:bg-transparent'>
               <TableHead className='text-center font-semibold'>이름</TableHead>
               <TableHead className='text-center font-semibold'>이메일</TableHead>
-              <TableHead className='text-center font-semibold'>ID</TableHead>
+              <TableHead className='text-center font-semibold'>닉네임</TableHead>
               <TableHead className='text-center font-semibold'>회원구분</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
             {users.map((user) => (
-              <Fragment key={user.userId}>
+              <Fragment key={user.userEmail}>
                 <TableRow
                   className='cursor-pointer hover:bg-gray-100'
-                  onClick={() => toggleRow(user.userId)}
+                  onClick={() => toggleRow(user.userEmail)}
                 >
                   <TableCell className='text-center'>{user.userName}</TableCell>
                   <TableCell className='text-center'>{user.userEmail}</TableCell>
-                  <TableCell className='text-center'>{user.userId}</TableCell>
+                  <TableCell className='text-center'>{user.userNickname}</TableCell>
                   <TableCell className='text-center'>{user.userRole}</TableCell>
                 </TableRow>
 
-                {expandedRows.includes(user.userId) && (
+                {expandedRows.includes(user.userEmail) && (
                   <TableRow>
                     <TableCell
                       colSpan={4}
                       className='bg-gray-100'
                     >
                       <dl
-                        id={`user-details-${user.userId}`}
+                        id={`user-details-${user.userEmail}`}
                         role='region'
                         className='space-y-2 p-4'
                       >
-                        <div className='flex gap-2'>
-                          <dt className='font-semibold'>ID:</dt>
-                          <dd>{user.userId}</dd>
-                        </div>
-
                         <div className='flex gap-2'>
                           <dt className='font-semibold'>이름:</dt>
                           <dd>{user.userName}</dd>
