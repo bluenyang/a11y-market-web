@@ -1,4 +1,4 @@
-import A11yButton from '@/components/A11y/A11yButton';
+import A11yButton from '@/components/accessibility/A11yButton';
 import Footer from '@/components/layout/footer';
 import TopBar from '@/components/layout/top-bar';
 import { Spinner } from '@/components/ui/spinner';
@@ -53,7 +53,7 @@ function Root() {
       textSpacingLevel === 0 ? 'normal' : textSpacingLevel === 1 ? '1px' : '2px';
 
     //줄 간격
-    root.style.lineHeight = lineHeightLevel === 0 ? '1.4' : lineHeightLevel === 2 ? '1.8' : '2.2';
+    root.style.lineHeight = lineHeightLevel === 0 ? '1.4' : lineHeightLevel === 1 ? '1.8' : '2.2';
 
     //정렬
     root.style.textAlign = textAlign;

@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Settings2 } from 'lucide-react';
 import { useState } from 'react';
-import A11yOverlay from './A11yOverlay';
+import A11yOverlay from '@/components/accessibility/A11yOverlay';
 
 export default function A11yButton() {
   const [open, setOpen] = useState(false);

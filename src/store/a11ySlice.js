@@ -15,7 +15,7 @@ const initialState = {
   // 텍스트 정렬 : 'left' | 'center' | 'right'
   textAlign: 'left',
 
-  // 행 높이: 0(기본), 1(넓게), 2(많이 넓게)
+  // 줄 간격: 0(기본), 1(넓게), 2(많이 넓게)
   lineHeightLevel: 0,
 
   //토글류 옵션들
@@ -25,7 +25,7 @@ const initialState = {
   cursorHighlight: false,
 };
 
-// slice 정의
+
 const a11ySlice = createSlice({
   name: 'a11y',
   initialState,
@@ -43,7 +43,7 @@ const a11ySlice = createSlice({
       state.textSpacingLevel = (state.textSpacingLevel + 1) % 3;
     },
     cycleLineHeight(state) {
-      // 행 높이 순환
+      // 줄 간격 순환
       state.lineHeightLevel = (state.lineHeightLevel + 1) % 3;
     },
     cycleTextAlign(state) {
@@ -78,7 +78,11 @@ const a11ySlice = createSlice({
     setAllA11y(state, action) {
       return { ...state, ...action.payload };
     },
+
+    loadA11y(state, action) {
+      Object.assign(state, action.payload);
   },
+},
 });
 
 // action, reducer export
@@ -94,6 +98,7 @@ export const {
   toggleCursorHighlight,
   resetAll,
   setAllA11y,
+  loadA11y,
 } = a11ySlice.actions;
 
 export default a11ySlice.reducer;

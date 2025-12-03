@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
-import A11yOverlay from '@/components/A11y/A11yOverlay';
+import A11yOverlay from '@/components/accessibility/A11yOverlay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 

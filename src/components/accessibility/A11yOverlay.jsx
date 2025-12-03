@@ -1,6 +1,5 @@
 // src/components/A11y/A11yOverlay.jsx
 
-import { updateUserA11ySettings } from '@/api/a11yApi';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -41,6 +40,8 @@ import {
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import A11yOverlaySave from './A11yOverlaySave';
+
 const languages = [
   { code: 'ko', label: '한국어' },
   { code: 'en', label: 'English' },
@@ -48,27 +49,14 @@ const languages = [
   { code: 'zh', label: '中文' },
 ];
 
-export default function A11yOverlay({ open, onClose }) {
+export default function A11yOverlay({ open, onClose, reloadProfiles }) {
   const dispatch = useDispatch();
 
   const a11yState = useSelector((state) => state.a11y);
 
-  const handleSave = async () => {
-    try {
-      await updateUserA11ySettings(a11yState);
-      alert('접근성 설정이 저장되었습니다.');
-      onClose();
-    } catch (error) {
-      alert('저장 중 오류가 발생했습니다.');
-    }
-  };
-
-  const [langOpen, setLangOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [selectedLang, setSelectedLang] = useState('ko');
   const [selectedProfile, setSelectedProfile] = useState(null); // vision/ cognitive/ screenReader/ senior/ custom
-
   const [selectedSubMode, setSelectedSubMode] = useState(null);
 
   //전역 상태
@@ -82,7 +70,7 @@ export default function A11yOverlay({ open, onClose }) {
     smartContrast,
     highlightLinks,
     cursorHighlight,
-  } = useSelector((state) => state.a11y);
+  } = a11yState;
 
   // 프로필 설정 적용
   const applyProfileSettings = (settings) => {
@@ -535,7 +523,7 @@ export default function A11yOverlay({ open, onClose }) {
               variant='default'
               className='w-full'
               aria-label='접근성 설정 저장'
-              onClick={handleSave}
+              onClick={() => setSaveModalOpen(true)}
             >
               저장하기
             </Button>
@@ -554,6 +542,13 @@ export default function A11yOverlay({ open, onClose }) {
           </div>
         </div>
       </SheetContent>
+
+      <A11yOverlaySave
+        open={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+        reloadProfiles={reloadProfiles}
+        a11yState={a11yState}
+      />
     </Sheet>
   );
 }

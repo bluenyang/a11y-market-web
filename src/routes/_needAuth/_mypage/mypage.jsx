@@ -16,6 +16,7 @@ function RouteComponent() {
   const menuItems = [
     { label: '회원 정보', path: '/mypage' },
     { label: '주문 내역', path: '/mypage/order' },
+    { label: '접근성 프로필', path: '/mypage/a11y' },
     { label: '배송지 관리', path: '/mypage/address' },
     { label: '회원 정보 수정', path: '/mypage/editProfile' },
   ];
