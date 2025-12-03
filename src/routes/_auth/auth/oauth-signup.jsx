@@ -82,6 +82,12 @@ function RouteComponent() {
     if (inputRef.current && !isCompleted) {
       inputRef.current.focus();
     }
+
+    if (tempToken === '' || tempToken == null) {
+      navigate({
+        to: '/invalid-path',
+      });
+    }
   }, [currentStep, isCompleted]);
 
   const currentField = steps[currentStep];
@@ -194,7 +200,7 @@ function RouteComponent() {
 
   if (isCompleted) {
     return (
-      <main className='to p-4` flex min-h-screen items-center justify-center bg-neutral-50'>
+      <main className='flex items-center justify-center bg-neutral-50 py-16'>
         <Card className='w-full max-w-md'>
           <CardHeader className='text-center'>
             <div className='mb-4 flex justify-center'>
@@ -239,18 +245,23 @@ function RouteComponent() {
   }
 
   return (
-    <main className='to p-4` flex min-h-screen items-center justify-center bg-neutral-50'>
+    <main className='flex items-center justify-center bg-neutral-50 py-16'>
       <Card className='w-full max-w-md'>
         <CardHeader>
           <CardTitle>
-            <h1 className='text-xl font-bold'>간편회원가입</h1>
+            <h1 className='text-xl font-extrabold'>간편회원가입</h1>
           </CardTitle>
           <CardDescription>
-            <span>{`단계 ${currentStep + 1} / ${steps.length}`}</span>
+            <span
+              aria-live='polite'
+              className='text-sm'
+            >
+              {`단계 ${currentStep + 1} / ${steps.length}`}
+            </span>
           </CardDescription>
           <Progress
             value={progress}
-            className='mt-2'
+            className='mt-2 h-3'
             aria-label={`진행률 ${Math.round(progress)}%`}
           />
         </CardHeader>
@@ -264,7 +275,7 @@ function RouteComponent() {
               {steps.map((step, index) => (
                 <div
                   key={step.id}
-                  className={`size-2 rounded-full transition-all ${
+                  className={`size-3 rounded-full transition-all ${
                     index === currentStep
                       ? 'bg-blue-600'
                       : index < currentStep
