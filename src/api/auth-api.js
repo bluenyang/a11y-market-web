@@ -9,6 +9,10 @@ export const authApi = {
     return axiosInstance.post('/v1/auth/logout');
   },
 
+  join: (data) => {
+    return axiosInstance.post('/v1/auth/join', data);
+  },
+
   kakaoJoin: (data, accessToken) => {
     return axiosInstance.post('/v1/auth/kakao-join', data, {
       headers: {
@@ -22,6 +26,24 @@ export const authApi = {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+    });
+  },
+
+  checkEmailExists: (email) => {
+    return axiosInstance.get('/v1/auth/check/email', {
+      params: { email },
+    });
+  },
+
+  checkNicknameExists: (nickname) => {
+    return axiosInstance.get('/v1/auth/check/nickname', {
+      params: { nickname },
+    });
+  },
+
+  checkPhoneExists: (phone) => {
+    return axiosInstance.get('/v1/auth/check/phone', {
+      params: { phone },
     });
   },
 };
