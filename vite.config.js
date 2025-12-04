@@ -23,6 +23,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.indexOf('node_modules') !== -1) {
+            const module = id.split('node_modules/')[1].split('/')[0];
+            return `vendor_${module}`;
+          }
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
