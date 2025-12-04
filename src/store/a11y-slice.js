@@ -10,7 +10,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 // 전역 접근성 초기 상태
 const initialState = {
-  // 대비 단계 : 0(기본) 1(반전), 2(다크), 3(라이트)
+  // 대비 단계 : 0(기본) 1(반전), 2(다크), 3(고대비), 4(저대비)
   contrastLevel: A11yContrast.NORMAL,
 
   // 글자 크기 단계 : 0(기본), 1(크게), 2(많이 크게)
