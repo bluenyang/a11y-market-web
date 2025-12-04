@@ -108,7 +108,7 @@ export default function A11yOverlay({ open, onClose, reloadProfiles }) {
   const iconSize = 'size-10';
   const boxBase =
     'relative flex flex-col items-center justify-center gap-2 rounded-xl border bg-gray-100 px-4 py-20 text-sm cursor-pointer focus:outline-none focus:ring-0 focus:ring-offset-0';
-  const contrastLabels = ['기본 대비', '색 반전', '다크', '라이트'];
+  const contrastLabels = ['기본 대비', '색 반전', '고대비', '저대비'];
 
   return (
     <Sheet
@@ -199,6 +199,8 @@ export default function A11yOverlay({ open, onClose, reloadProfiles }) {
                     onValueChange={(modeId) => {
                       setSelectedSubMode(modeId);
 
+                      dispatch(resetAll());
+                      
                       const selectedMode = A11Y_PROFILES[selectedProfile].items.find(
                         (item) => item.id === modeId,
                       );
