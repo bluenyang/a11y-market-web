@@ -2,7 +2,7 @@ import { LoadingEmpty } from '@/components/main/loading-empty';
 import { store } from '@/store/store';
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/_needauth')({
+export const Route = createFileRoute('/_need-auth')({
   beforeLoad: async ({ location }) => {
     const { user, isAuthenticated, isLoading } = store.getState().auth;
 

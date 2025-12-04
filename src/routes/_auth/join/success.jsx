@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
-import A11yOverlay from '@/components/accessibility/a11y-overlay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -24,36 +23,22 @@ function JoinSuccessPage() {
 
         <CardContent className='space-y-6 text-center text-lg leading-relaxed text-gray-700'>
           <p>A11Y MARKET에 가입해주셔서 감사합니다.</p>
-          <p>원하시면 지금 바로 접근성 설정을 진행해 더 편안한 사용 환경을 구성할 수 있어요.</p>
+          <p>
+            오른쪽 하단의 버튼을 눌러 바로 접근성 설정을 진행하면, 더 편안한 사용 환경을 구성할 수
+            있어요.
+          </p>
         </CardContent>
 
         <CardFooter className='flex flex-col gap-4 pt-6'>
-          {/* 접근성 설정 버튼 */}
           <Button
-            className='h-14 w-full text-lg font-semibold'
-            onClick={() => setOpenA11y(true)}
-          >
-            바로 접근성 설정하기
-          </Button>
-
-          {/* 메인으로 건너뛰기 */}
-          <Button
-            variant='outline'
+            variant='default'
             className='h-12 w-full text-base font-medium'
             onClick={() => navigate({ to: '/' })}
           >
-            건너뛰기
+            메인으로 가기
           </Button>
         </CardFooter>
       </Card>
-
-      {/* 접근성 오버레이 (CTRL+U와 동일한 UI) */}
-      {openA11y && (
-        <A11yOverlay
-          open={openA11y}
-          onClose={() => setOpenA11y(false)}
-        />
-      )}
     </div>
   );
 }

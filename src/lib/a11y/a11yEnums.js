@@ -68,6 +68,16 @@ export const A11yTextAlign = {
   LEFT: 'left',
   CENTER: 'center',
   RIGHT: 'right',
+  getA11yTextAlignStep: (align) => {
+    switch (align) {
+      case 'center':
+        return 1;
+      case 'right':
+        return 2;
+      default:
+        return 0;
+    }
+  },
 };
 
 export const A11yTextAlignClass = (textAlign) => {
