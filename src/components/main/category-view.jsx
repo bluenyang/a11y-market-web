@@ -16,8 +16,6 @@ export function CategoryView({ products }) {
       try {
         const resp = await mainApi.getCategories();
         setItemList(resp.data);
-        console.log('Categories fetched:', resp.data);
-        console.log(resp.data[0].categoryId.toString());
       } catch (error) {
         console.error('Failed to fetch categories:', error);
       }

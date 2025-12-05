@@ -41,7 +41,6 @@ export const MainCarousel = ({ data }) => {
       try {
         const response = await mainApi.getEventBanners();
         setBannerData(response.data);
-        console.log('배너 데이터:', response.data);
       } catch (error) {
         console.error('배너 데이터를 불러오는 중 오류 발생:', error);
       } finally {
@@ -59,7 +58,6 @@ export const MainCarousel = ({ data }) => {
     navigate({
       to: url,
     });
-    console.log('Navigate to:', url);
   };
 
   const handleDotClick = (index) => {
