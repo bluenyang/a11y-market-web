@@ -43,7 +43,7 @@ export function RealtimeRanking() {
   return (
     <>
       <h2 className='mb-4 flex h-16 w-full items-center bg-neutral-300 px-16 text-2xl font-bold dark:bg-neutral-500'>
-        실시간 인기 상품
+        인기 상품
       </h2>
       <div className='relative mx-auto flex w-[80%] flex-col items-center justify-center px-0 pb-8 md:px-8'>
         <Carousel
@@ -72,8 +72,8 @@ export function RealtimeRanking() {
                       />
                     </div>
                   </CardContent>
-                  <CardFooter className='flex flex-col items-start gap-2 p-4'>
-                    <span className='text-xl font-extrabold'>{item.productName}</span>
+                  <CardFooter className='flex w-3xs flex-col items-start gap-2 p-4'>
+                    <span className='w-56 truncate text-xl font-extrabold'>{item.productName}</span>
                     <span className='text-base font-bold text-neutral-600 dark:text-neutral-300'>
                       {item.productPrice + '원'}
                     </span>
