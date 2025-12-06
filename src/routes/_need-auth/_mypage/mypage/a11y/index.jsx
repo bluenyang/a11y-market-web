@@ -1,4 +1,4 @@
-import { deleteA11yProfile, getA11yProfiles } from '@/api/a11y-api';
+import { a11yApi } from '@/api/a11y-api';
 import A11yEditModal from '@/components/accessibility/a11y-edit-modal';
 import A11yProfileList from '@/components/accessibility/a11y-profile-list';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,7 +21,7 @@ export default function A11ySettingsPage() {
   //프로필 목록 불러오기
   const loadProfiles = async () => {
     try {
-      const data = await getA11yProfiles();
+      const data = await a11yApi.getA11yProfiles();
       setProfiles(data);
     } catch {
       toast.error('접근성 프로필을 불러오지 못했습니다.');
@@ -83,7 +83,7 @@ export default function A11ySettingsPage() {
   const handleDelete = async (profileId) => {
     if (!window.confirm('프로필을 삭제할까요?')) return;
     try {
-      await deleteA11yProfile(profileId);
+      await a11yApi.deleteA11yProfile(profileId);
       await loadProfiles();
     } catch {
       toast.error('삭제 중 오류가 발생했습니다.');

@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
-import { createA11yProfile } from '@/api/a11y-api';
+import { a11yApi } from '@/api/a11y-api';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
@@ -48,7 +48,7 @@ export default function A11yOverlaySave({ open, onClose, reloadProfiles, a11ySta
         cursorHighlight: a11yState.cursorHighlight ? 1 : 0,
       };
 
-      const resp = await createA11yProfile(payload);
+      const resp = await a11yApi.createA11yProfile(payload);
 
       if (!resp.status) {
         setErrors((prev) => ({ ...prev, submit: resp.message || '프로필 저장에 실패했습니다.' }));

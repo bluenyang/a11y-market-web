@@ -1,5 +1,4 @@
 import axiosInstance from '@/api/axios-instance';
-import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -17,7 +16,6 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item';
-import { getOrderItemStatusLabel } from '@/lib/order-status-mapping';
 import { Icon } from '@iconify/react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
@@ -35,17 +33,11 @@ function RouteComponent() {
     { label: '취소/환불', path: '/mypage/orders/canceled' },
   ];
 
-  const [userInfo, setUserInfo] = useState({});
   const [orderList, setOrderList] = useState([]);
   const [activeOrderMenu, setActiveOrderMenu] = useState(orderMenuItems[0].path);
   const navigate = useNavigate();
 
   useEffect(() => {
-    (async () => {
-      const resp = await axiosInstance.get('/v1/users/me');
-      setUserInfo(resp.data);
-    })();
-
     (async () => {
       const resp = await axiosInstance.get('/v1/users/me/orders');
       setOrderList(resp.data);
@@ -54,27 +46,7 @@ function RouteComponent() {
   }, []);
 
   return (
-    <div className='flex flex-col items-center justify-center'>
-      <section className='w-full py-16'>
-        <div className='flex items-center justify-evenly'>
-          <div className='flex items-center gap-8'>
-            <Avatar
-              alt='프로필 이미지'
-              className='size-24 bg-neutral-200'
-            />
-            <div className='flex flex-col gap-2'>
-              <h1 className='text-4xl font-bold'>{userInfo.userNickname}</h1>
-              <p className='text-lg'>환영합니다, {userInfo.userNickname}!</p>
-            </div>
-          </div>
-          <Button
-            className='ml-8 px-12 py-6 text-lg font-bold'
-            onClick={() => navigate({ to: '/mypage/profile/edit' })}
-          >
-            프로필 수정
-          </Button>
-        </div>
-      </section>
+    <>
       <section className='flex w-full flex-col gap-4 bg-neutral-300 px-8 pt-8'>
         <h2 className='text-3xl font-bold text-neutral-800'>주문 내역</h2>
         <div className='hidden w-full flex-row items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 xl:flex 2xl:w-xl dark:border-neutral-600 dark:bg-neutral-700 dark:focus-within:border-blue-400 dark:focus-within:ring-blue-400'>
@@ -196,9 +168,17 @@ function RouteComponent() {
                               <h4 className='text-primary text-xl font-bold'>{item.productName}</h4>
                             </ItemTitle>
                             <div className='flex flex-1 flex-col justify-center'>
-                              <p className='text-md'>{'가격: ${item.productPrice?.toLocaleString()}원 | 수량: ${item.productQuantity}'}</p>
-                              <p className='text-md'>{'총액: ${item.productTotalPrice?.toLocaleString()}원'}</p>
-                              <p className='text-md'>{'상태: ${getOrderItemStatusLabel(item.orderItemStatus)}'}</p>
+                              <p className='text-md'>
+                                {
+                                  '가격: ${item.productPrice?.toLocaleString()}원 | 수량: ${item.productQuantity}'
+                                }
+                              </p>
+                              <p className='text-md'>
+                                {'총액: ${item.productTotalPrice?.toLocaleString()}원'}
+                              </p>
+                              <p className='text-md'>
+                                {'상태: ${getOrderItemStatusLabel(item.orderItemStatus)}'}
+                              </p>
                             </div>
                           </ItemContent>
                           <ItemActions>
@@ -222,6 +202,6 @@ function RouteComponent() {
           </div>
         )}
       </section>
-    </div>
+    </>
   );
 }

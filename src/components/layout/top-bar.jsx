@@ -124,7 +124,7 @@ export default function TopBar() {
     // 장바구니 아이템 수 가져오기
     const fetchCartItems = async () => {
       const resp = await cartApi.getCartItemNumber();
-      setCartItemCount(resp.itemCount);
+      setCartItemCount(resp.data?.count);
     };
 
     if (isAuthenticated) {

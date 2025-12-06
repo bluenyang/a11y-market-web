@@ -1,4 +1,4 @@
-import { createOrder, getCheckoutInfo } from '@/api/order-api';
+import { orderApi } from '@/api/order-api';
 import { AddressSelector } from '@/components/address/address-selector';
 import { ErrorEmpty } from '@/components/main/error-empty';
 import { LoadingEmpty } from '@/components/main/loading-empty';
@@ -44,7 +44,7 @@ function orderCheckoutPage() {
     const fetchCheckout = async () => {
       try {
         setLoading(true);
-        const data = await getCheckoutInfo(orderItems.map((item) => item.cartItemId));
+        const data = await orderApi.getCheckoutInfo(orderItems.map((item) => item.cartItemId));
         setCheckout(data);
 
         const defaultAddress = data.addresses.find(
@@ -66,7 +66,7 @@ function orderCheckoutPage() {
     try {
       setLoading(true);
 
-      const data = await createOrder(
+      const data = await orderApi.createOrder(
         selectedAddress.addressId,
         orderItems.map((item) => item.cartItemId),
       );
@@ -167,7 +167,9 @@ function orderCheckoutPage() {
                 <TableBody className='px-8'>
                   {orderItems.map((item) => (
                     <TableRow key={item.productId}>
-                      <TableCell className='max-w-40 truncate px-8'>{'${item.productName}'}</TableCell>
+                      <TableCell className='max-w-40 truncate px-8'>
+                        {'${item.productName}'}
+                      </TableCell>
                       <TableCell className='text-center'>{item.quantity}</TableCell>
                       <TableCell className='text-center'>{`${item.productPrice?.toLocaleString('ko-KR')}원`}</TableCell>
                       <TableCell className='text-center'>{`${(item.productPrice * item.quantity).toLocaleString('ko-KR')}원`}</TableCell>
@@ -223,7 +225,9 @@ function orderCheckoutPage() {
               <CardContent className='flex flex-col gap-2'>
                 <span>{`총 상품 금액: ${checkout?.totalAmount}원`}</span>
                 <span>{`배송비: ${checkout?.shippingFee}원`}</span>
-                <span className='text-lg font-bold'>{'총 결제 금액: ${checkout?.finalAmount}원'}</span>
+                <span className='text-lg font-bold'>
+                  {'총 결제 금액: ${checkout?.finalAmount}원'}
+                </span>
               </CardContent>
             </Card>
 

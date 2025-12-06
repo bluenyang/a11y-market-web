@@ -1,6 +1,5 @@
 // src/routes/cart.jsx
 import { cartApi } from '@/api/cart-api';
-import { getCheckoutInfo } from '@/api/order-api';
 import { CartGroup } from '@/components/cart-group';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import {
@@ -53,7 +52,8 @@ function CartPage() {
 
     // 주문이 가능한지 확인
     try {
-      const checkData = await getCheckoutInfo(options.selectedItems, options.orderAllItems);
+      const resp = await orderApi.getCheckoutInfo(options.selectedItems, options.orderAllItems);
+      const checkData = resp.data;
 
       if (checkData.status === 'OUT_OF_STOCK') {
         setErr('재고가 부족한 상품이 있습니다.');
@@ -78,13 +78,10 @@ function CartPage() {
 
   useEffect(() => {
     const fetchCartData = async () => {
-      const data = await cartApi.getCartItems();
-      // const data = {
-      //   items: [],
-      // };
+      const resp = await cartApi.getCartItems();
 
-      setCartGroups(data);
-      setTotalPrice(data.total || 0);
+      setCartGroups(resp.data);
+      setTotalPrice(resp.data?.total || 0);
     };
     fetchCartData();
   }, []);

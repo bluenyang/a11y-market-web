@@ -1,5 +1,5 @@
 // src/routes/_needAuth/seller/apply.jsx
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,14 @@ import { Field, FieldGroup } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { ROLES } from '@/constants/roles';
+import { useSelector } from 'react-redux';
+import { toast } from 'sonner';
 
 function SellerApplyPage() {
+  const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+
   const [shopName, setShopName] = useState('');
   const [businessNo, setBusinessNo] = useState('');
   const [description, setDescription] = useState('');
@@ -25,6 +31,14 @@ function SellerApplyPage() {
     e.preventDefault();
     // TODO: 나중에 API 연동
   };
+
+  if (!user || user?.userRole !== ROLES.USER) {
+    toast.error('판매자 가입 신청은 일반 회원만 이용할 수 있습니다.');
+    navigate({
+      to: '/unauthorized',
+    });
+    return null;
+  }
 
   return (
     <div className='mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8'>
@@ -140,6 +154,6 @@ function SellerApplyPage() {
   );
 }
 
-export const Route = createFileRoute('/_need-auth/_seller/seller/apply')({
+export const Route = createFileRoute('/_need-auth/seller/apply')({
   component: SellerApplyPage,
 });

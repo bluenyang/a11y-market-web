@@ -1,11 +1,16 @@
 // src/routes/products/$productId.jsx
-import SellerTrustInfo from '@/components/product/seller-trust-info';
+import { productApi } from '@/api/product-api';
+import { ImageWithFallback } from '@/components/image-with-fallback';
+import { LoadingEmpty } from '@/components/main/loading-empty';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { RotateCcw, Shield, ShoppingCart, Store, Truck } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 // 임시 상품 데이터 (백엔드 연동 전까지 UI 확인용)
-const mockProduct = {
+const productData = {
   id: 1,
   name: '상품명',
   price: 0,
@@ -20,24 +25,36 @@ const mockProduct = {
   ],
 };
 
-// 상품문의(Q&A) 영역은 현재 사용 X
-// 필요해지면 아래 mockQnaList와 activeTab === "qna" 블록을 다시 활성화하면 됨.
-// const mockQnaList = [ ... ];
-
 function ProductDetailPage() {
   const { productId } = Route.useParams(); // 실제 연동 시 사용 예정
 
   // 기본 탭은 상세정보로
-  const [activeTab, setActiveTab] = useState('details');
+  const [productData, setProductData] = useState(null);
   const [selectedOptions, setSelectedOptions] = useState({});
   const [quantity, setQuantity] = useState(1); // 수량 상태
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleChangeOption = (optionId, value) => {
-    setSelectedOptions((prev) => ({
-      ...prev,
-      [optionId]: value,
-    }));
-  };
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      setIsLoading(true);
+      try {
+        const response = await productApi.getProductDetails(productId);
+        setProductData(response.data);
+        console.log('Fetched productData details:', response.data);
+      } catch (error) {
+        console.error('Failed to fetch productData details:', error);
+        navigate({
+          to: '/not-found',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProductDetails();
+  }, [productId]);
 
   const handleBuyNow = () => {
     // TODO: 바로구매 로직
@@ -57,252 +74,161 @@ function ProductDetailPage() {
     });
   };
 
-  // select ~ button 을 하나의 form 으로 묶어서 서버 제출 구조에 맞춤
-  const handleSubmitOrder = (event) => {
-    event.preventDefault();
-    const action = event.nativeEvent.submitter?.value;
-
-    if (action === 'buy') {
-      handleBuyNow();
-    } else if (action === 'cart') {
-      handleAddToCart();
-    }
-  };
+  if (isLoading || !productData) {
+    return <LoadingEmpty />;
+  }
 
   return (
     <main
-      className='mx-auto mt-20 max-w-5xl px-4 py-10 text-[#333333]'
+      className='mx-auto max-w-5xl px-4'
       aria-label='상품 상세 정보 페이지'
     >
-      {/* 상단 상세 영역 */}
-      <section
-        className='flex flex-col gap-8 md:flex-row'
-        aria-label='상품 기본 정보 영역'
-      >
-        {/* 이미지 영역 */}
-        <div className='md:w-1/2'>
-          <div
-            className='flex aspect-square items-center justify-center bg-gray-200 text-3xl text-gray-500'
-            role='img'
-            aria-label={`${mockProduct.name} 대표 이미지`}
-          >
-            image
-          </div>
-        </div>
-
-        {/* 정보 영역 */}
-        <div className='space-y-4 md:w-1/2'>
-          <div className='flex items-center gap-2 text-sm'>
-            {/* 판매자 정보 */}
-            <SellerTrustInfo
-              // sellerId={mockProduct.sellerId}
-              sellerName={mockProduct.sellerName}
-              sellerGrade={mockProduct.sellerGrade}
-              a11yGuarantee={mockProduct.a11yGuarantee}
-            />
-            <span className='text-gray-600'>{mockProduct.sellerName} &gt; </span>
-          </div>
-          {/* 상품명 / 가격 */}
-          <div
-            className='space-y-1'
-            aria-label='상품명 및 가격'
-          >
-            <h1 className='font-kakao-big text-xl font-semibold'>{mockProduct.name}</h1>
-            <p className='font-kakao-big text-lg font-bold'>
-              {mockProduct.price.toLocaleString('ko-KR')}원
-            </p>
-          </div>
-
-          {/* 배송 정보 */}
-          <div
-            className='text-xs leading-5'
-            aria-label='배송 정보'
-          >
-            {mockProduct.shippingInfo.map((line) => (
-              <div key={line}>{line}</div>
-            ))}
-          </div>
-
-          {/* 상품정보 요약 박스 */}
-          <div aria-label='상품정보 요약'>
-            <div className='mb-1 text-xs'>상품정보 요약</div>
-            <div className='h-24 border border-gray-300 bg-gray-100 p-3 text-xs'>
-              {mockProduct.summary}
+      <article className='container mx-auto px-4 py-8'>
+        <div className='rounded-lg bg-neutral-50 p-6 shadow-sm md:p-8 dark:bg-neutral-900'>
+          <section className='grid gap-8 md:grid-cols-2'>
+            {/* 상품 이미지 */}
+            <div>
+              <div className='aspect-square overflow-hidden rounded-lg bg-neutral-100'>
+                <ImageWithFallback
+                  src={productData.productImages[0]?.imageUrl}
+                  alt={`${productData.productName} 대표 이미지`}
+                  className='size-full object-cover'
+                />
+              </div>
             </div>
-          </div>
 
-          {/* 옵션 + 수량 + 버튼을 하나의 form 으로 묶음 */}
-          <form
-            className='space-y-3'
-            aria-label='옵션 및 수량 선택 폼'
-            onSubmit={handleSubmitOrder}
-          >
-            {/* 옵션 선택 */}
-            <div
-              className='space-y-2'
-              aria-label='옵션 선택 영역'
-            >
-              {mockProduct.options.map((opt) => (
-                <div
-                  key={opt.id}
-                  className='flex flex-col gap-1'
+            {/* 상품 정보 */}
+            <div>
+              <Badge className='mb-2'>{productData.categoryName}</Badge>
+
+              {/* 판매자 이름 - 상품명 상단 */}
+              <div className='mb-2 flex items-center gap-2'>
+                <Store
+                  className='size-4 text-neutral-600 dark:text-neutral-300'
+                  aria-hidden='true'
+                />
+                <Link
+                  to={`/seller/${productData.sellerId}`}
+                  className='text-neutral-700 transition-colors hover:text-blue-600 hover:underline dark:text-neutral-200 dark:hover:text-blue-400'
                 >
-                  <label
-                    className='text-xs'
-                    htmlFor={opt.id}
-                    aria-label={`${opt.label} 선택 레이블`}
+                  {productData.sellerName}
+                </Link>
+                {productData.isA11yGuarantee && (
+                  <Badge
+                    variant='secondary'
+                    className='bg-green-500 px-2 py-1 text-white dark:bg-green-600'
                   >
-                    {opt.label}
-                  </label>
-                  <select
-                    id={opt.id}
-                    className='h-8 w-full border border-gray-300 bg-[#f5f5f5] px-2 text-xs'
-                    value={selectedOptions[opt.id] || ''}
-                    onChange={(e) => handleChangeOption(opt.id, e.target.value)}
-                    aria-label={`${opt.label} 선택`}
-                  >
-                    <option value=''>{opt.label}</option>
-                    {opt.values.map((v) => (
-                      <option
-                        key={v}
-                        value={v}
-                      >
-                        {v}
-                      </option>
-                    ))}
-                  </select>
+                    <Shield
+                      className='size-4'
+                      aria-hidden='true'
+                    />
+                    접근성 보장
+                  </Badge>
+                )}
+              </div>
+
+              <h1 className='mb-4 text-3xl'>{productData.productName}</h1>
+              <div className='mb-4 border-t border-b py-4'>
+                <div className='mb-2 text-3xl'>
+                  {productData.productPrice?.toLocaleString('ko-KR')}원
                 </div>
-              ))}
-            </div>
+                <p className='text-sm'>재고: {productData.stock}개</p>
+              </div>
 
-            {/* 수량 입력 */}
-            <div
-              className='flex items-center gap-2'
-              aria-label='수량 선택'
+              <p className='mb-6 leading-relaxed'>{productData.productDescription}</p>
+
+              {/* 구매 버튼 */}
+              <div className='flex gap-3'>
+                <Button
+                  variant='outline'
+                  size='lg'
+                  onClick={handleAddToCart}
+                  className='flex-1 gap-2'
+                  aria-label='장바구니에 추가'
+                >
+                  <ShoppingCart
+                    className='size-5'
+                    aria-hidden='true'
+                  />
+                  장바구니
+                </Button>
+                <Button
+                  size='lg'
+                  onClick={handleBuyNow}
+                  className='flex-1'
+                >
+                  바로 구매
+                </Button>
+              </div>
+
+              {/* 배송/교환 정보 */}
+              <div className='mt-6 space-y-3 text-sm'>
+                <div className='flex items-center gap-2'>
+                  <Truck
+                    className='size-5'
+                    aria-hidden='true'
+                  />
+                  <span>무료배송 (3만원 이상 구매 시)</span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <RotateCcw
+                    className='size-5'
+                    aria-hidden='true'
+                  />
+                  <span>7일 이내 무료 반품</span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <Shield
+                    className='size-5'
+                    aria-hidden='true'
+                  />
+                  <span>구매 안전 보호</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 상세 정보 탭 */}
+          <Tabs
+            defaultValue='details'
+            className='mt-8'
+          >
+            <TabsList className='w-full max-w-full rounded-full p-1'>
+              <TabsTrigger
+                value='details'
+                className='rounded-full'
+              >
+                상세 정보
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent
+              value='details'
+              className='py-6'
             >
-              <label
-                htmlFor='quantity'
-                className='font-kakao-big text-xs'
-                aria-label='상품 수량 입력 레이블'
-              >
-                수량
-              </label>
-              <input
-                id='quantity'
-                type='number'
-                min={1}
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-                className='h-8 w-20 border border-gray-300 px-2 text-xs'
-                aria-label='상품 수량 입력'
-              />
-            </div>
-
-            {/* 버튼 영역 */}
-            <div
-              className='flex gap-2 pt-2'
-              aria-label='구매 및 장바구니 버튼'
-            >
-              <Button
-                type='submit'
-                name='action'
-                value='buy'
-                variant='outline'
-                className='font-kakao-big h-10 flex-1 rounded-none'
-                aria-label='해당 상품 바로 구매'
-              >
-                Buy Now
-              </Button>
-              <Button
-                type='submit'
-                name='action'
-                value='cart'
-                className='font-kakao-big h-10 flex-1 rounded-none'
-                aria-label='해당 상품 장바구니에 담기'
-              >
-                Add to Cart
-              </Button>
-            </div>
-          </form>
+              <h3 className='mb-4 text-xl'>상품 상세 정보</h3>
+              <div className='prose max-w-none'>
+                <p>{productData.productDescription}</p>
+                {/* 이미지 상세 정보가 있으면 gap 없이 1번부터 세로 나열 */}
+                <div className='space-y-6'>
+                  {productData.productImages.slice(1)?.map((image) => (
+                    <div
+                      key={image.imageSequence}
+                      className='overflow-hidden rounded-lg bg-neutral-100'
+                    >
+                      <ImageWithFallback
+                        src={image.imageUrl}
+                        alt={image.altText || `${productData.productName} 상세 이미지`}
+                        className='w-full'
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
-      </section>
-
-      {/* 탭 메뉴 */}
-      <section
-        className='mt-10 border border-gray-300'
-        aria-label='상품 상세 하단 탭 메뉴'
-      >
-        <div
-          className='grid grid-cols-2 text-sm'
-          role='tablist'
-          aria-label='상품 상세 정보와 배송 안내 탭'
-        >
-          <Button
-            type='button'
-            variant={activeTab === 'details' ? 'default' : 'ghost'}
-            className='font-kakao-big h-12 w-full rounded-none border-r border-gray-300'
-            onClick={() => setActiveTab('details')}
-            role='tab'
-            aria-selected={activeTab === 'details'}
-            aria-label='상세정보 탭'
-          >
-            상세정보
-          </Button>
-
-          {/* 상품문의 탭 (현재 미사용)
-          <Button
-            type="button"
-            variant={activeTab === "qna" ? "default" : "ghost"}
-            className="rounded-none border-r border-gray-300 h-12 w-full font-kakao-big"
-            onClick={() => setActiveTab("qna")}
-            role="tab"
-            aria-selected={activeTab === "qna"}
-            aria-label="상품문의 탭"
-          >
-            상품문의
-          </Button>
-          */}
-
-          <Button
-            type='button'
-            variant={activeTab === 'shipping' ? 'default' : 'ghost'}
-            className='font-kakao-big h-12 w-full rounded-none'
-            onClick={() => setActiveTab('shipping')}
-            role='tab'
-            aria-selected={activeTab === 'shipping'}
-            aria-label='배송 및 교환, 반품 안내 탭'
-          >
-            배송/교환/반품 안내
-          </Button>
-        </div>
-      </section>
-
-      {/* 탭 컨텐츠 영역 */}
-      <section className='mt-6'>
-        {activeTab === 'details' && (
-          <div
-            className='flex h-64 items-center justify-center border border-gray-200 text-sm text-gray-500'
-            role='tabpanel'
-            aria-label='상세정보 내용'
-          >
-            상세정보 컨텐츠 영역 (상세 이미지, 설명 등)
-          </div>
-        )}
-
-        {activeTab === 'shipping' && (
-          <div
-            className='flex h-64 items-center justify-center border border-gray-200 text-sm text-gray-500'
-            role='tabpanel'
-            aria-label='배송, 교환 및 반품 안내 내용'
-          >
-            배송/교환/반품 안내 내용 영역
-          </div>
-        )}
-
-        {/* 상품문의(Q&A) 탭 컨텐츠 (현재 전체 주석 처리)
-        {activeTab === "qna" && ( ... )}
-        */}
-      </section>
+      </article>
     </main>
   );
 }

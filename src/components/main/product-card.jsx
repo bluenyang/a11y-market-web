@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Link } from '@tanstack/react-router';
 import { ShoppingCart } from 'lucide-react';
 
-const MINIO_ENDPOINT = import.meta.env.VITE_MINIO_ENDPOINT;
-
 export const ProductCard = ({ product }) => {
   const formattedPrice = product.productPrice.toLocaleString('ko-KR');
 
@@ -13,13 +11,6 @@ export const ProductCard = ({ product }) => {
     event.preventDefault();
     // Implement add to cart functionality here
     alert('장바구니에 담겼습니다!');
-  };
-
-  const getImageUrl = (imagePath) => {
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    }
-    return `${MINIO_ENDPOINT}/${imagePath}`;
   };
 
   return (
@@ -30,7 +21,7 @@ export const ProductCard = ({ product }) => {
       <Link to={`/products/${product.productId}`}>
         <div className='relative aspect-square overflow-hidden rounded-t-lg'>
           <ImageWithFallback
-            src={getImageUrl(product.productImageUrl)}
+            src={product.productImageUrl}
             alt={product.productName}
             className='size-full object-cover transition-transform duration-300 group-hover:scale-105'
           />

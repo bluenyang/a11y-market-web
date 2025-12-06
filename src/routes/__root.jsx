@@ -2,6 +2,7 @@
 import { A11yMenu } from '@/components/accessibility/a11y-menu';
 import Footer from '@/components/layout/footer';
 import TopBar from '@/components/layout/top-bar';
+import { Toaster } from '@/components/ui/sonner';
 import { Spinner } from '@/components/ui/spinner';
 import { useA11yEffect } from '@/hooks/use-a11y-effect';
 import { useAuthInit } from '@/hooks/use-auth-init';
@@ -36,6 +37,7 @@ function Root() {
       <Outlet />
       {/* <A11yButton /> */}
       <A11yMenu />
+      <Toaster position='bottom-center' />
       <Footer />
       {import.meta.env.DEV && <TanStackRouterDevtools />}
     </>

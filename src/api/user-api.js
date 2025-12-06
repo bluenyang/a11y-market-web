@@ -1,6 +1,7 @@
 import axiosInstance from '@/api/axios-instance';
 
 export const userApi = {
-  getProfile: () => axiosInstance.get('/v1/users/me'),
-  updateProfile: (data) => axiosInstance.patch('/v1/users/me', data),
+  getProfile: async () => await axiosInstance.get('/v1/users/me'),
+
+  updateProfile: async (data) => await axiosInstance.patch('/v1/users/me', data),
 };

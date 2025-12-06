@@ -169,7 +169,7 @@ function PurchaseConfirmPage() {
 }
 
 //  search 에서 orderId 를 받음
-export const Route = createFileRoute('/_need-auth/_mypage/mypage/order/confirm')({
+export const Route = createFileRoute('/_need-auth/order/confirm')({
   component: PurchaseConfirmPage,
   validateSearch: (search) => ({
     orderId: typeof search.orderId === 'string' ? search.orderId : undefined,

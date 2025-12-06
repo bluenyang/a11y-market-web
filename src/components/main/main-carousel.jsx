@@ -9,8 +9,6 @@ import { useEffect, useRef, useState } from 'react';
 import { ImageWithFallback } from '../image-with-fallback';
 import { Carousel, CarouselContent, CarouselItem } from '../ui/carousel';
 
-const MINIO_ENDPOINT = import.meta.env.VITE_MINIO_ENDPOINT;
-
 export const MainCarousel = ({ data }) => {
   const autoPlay = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }));
   const fade = useRef(Fade());
@@ -64,10 +62,6 @@ export const MainCarousel = ({ data }) => {
     api?.scrollTo(index);
   };
 
-  const getImageUrl = (path) => {
-    return path.startsWith('http') ? path : `${MINIO_ENDPOINT}${path}`;
-  };
-
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -98,7 +92,7 @@ export const MainCarousel = ({ data }) => {
                   >
                     {/* 배너 이미지 */}
                     <ImageWithFallback
-                      src={getImageUrl(banner.eventImageUrl)}
+                      src={banner.eventImageUrl}
                       alt={banner.eventTitle}
                       className='h-full w-full object-cover'
                     />

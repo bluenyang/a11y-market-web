@@ -1,136 +1,83 @@
 // components/order/OrderCard.jsx
 
-import { cancelOrder } from '@/api/order-api';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Link } from '@tanstack/react-router';
-import { useState } from 'react';
-import CancelModal from './cancel-modal';
-
-const statusLabel = (status) => {
-  switch (status) {
-    case 'ORDERED':
-      return '주문완료';
-    case 'PAID':
-      return '결제완료';
-    case 'SHIPPED':
-      return '배송중';
-    case 'CONFIRMED':
-      return '구매확정';
-    case 'CANCEL_PENDING':
-      return '취소요청 중';
-    case 'CANCELED':
-      return '취소완료';
-    case 'RETURN_PENDING':
-      return '반품요청 중';
-    case 'RETURNED':
-      return '반품완료';
-    default:
-      return status;
-  }
-};
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { statusLabel } from '@/constants/order-item-status';
+import { useNavigate } from '@tanstack/react-router';
+import { ClipboardList } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '../ui/item';
 
 export default function OrderCard({ order }) {
-  const [open, setOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
+  const navigate = useNavigate();
 
-  const formatPhone = (phone) => {
-    if (!phone) return '정보 없음';
-    return phone.replace(/[^0-9]/g, '').replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+  const getLastOfUUID = (uuid) => {
+    if (!uuid) return '';
+    const parts = uuid.split('-');
+    return parts[parts.length - 1];
   };
 
   return (
-    <Card className='border-none bg-transparent shadow-none'>
+    <Card>
+      <CardHeader>
+        <div className='flex items-center justify-between'>
+          <h3 className='text-lg font-semibold'>주문 번호: {order.orderId}</h3>
+          <span className='text-sm text-neutral-700'>
+            {`주문일: ${new Date(order.createdAt).toLocaleDateString('ko-KR')}`}
+          </span>
+        </div>
+      </CardHeader>
       <CardContent className='space-y-2'>
-        {order.orderItems?.map((item) => (
-          <div
-            key={item.orderItemId}
-            className='flex items-center justify-between gap-6 rounded-lg border p-4'
-          >
-            <div className='flex items-start gap-4'>
-              {/* 나중에 이미지 연결 */}
-              <Link
-                to='/products/$productId'
-                params={{ productId: item.productId }}
-              >
+        {order.orderItems?.map((item) => {
+          const badge = statusLabel(item.orderItemStatus);
+          return (
+            <Item
+              key={item.orderItemId}
+              className='border-border space-y-2 rounded-lg border p-4'
+            >
+              <ItemMedia>
                 <img
-                  src={item.productImageUrl || '/no-image.png'}
+                  src={item.productImageUrl}
                   alt={item.productName}
-                  className='h-24 w-24 cursor-pointer object-cover'
+                  className='aspect-3/2 h-16 rounded-md object-cover'
                 />
-              </Link>
-
-              <div className='space-y-1'>
-                <p className='font-semibold'>{item.productName}</p>
-                <p className='text-gray-600'>
-                  가격:{' '}
-                  {typeof item.productPrice === 'number' ? item.productPrice.toLocaleString() : '-'}
-                  원 | 수량: {item.productQuantity}
-                </p>
-                <p className='text-gray-600'>
-                  총액: {(item.productPrice * item.productQuantity).toLocaleString()}원
-                </p>
-                <p>상태: {statusLabel(item.orderItemStatus)}</p>
-              </div>
-            </div>
-
-            {['ORDERED', 'PAID'].includes(item.orderItemStatus) && (
-              <Button
-                variant='default'
-                onClick={() => {
-                  setSelectedItem(item);
-                  setIsOpen(true);
-                }}
-              >
-                주문 취소
-              </Button>
-            )}
-          </div>
-        ))}
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle className='w-full justify-start gap-4 text-lg font-bold'>
+                  <ClipboardList />
+                  {`ID: ${getLastOfUUID(item.orderItemId)}`}
+                  <Badge className={badge.className}>{badge.label}</Badge>
+                </ItemTitle>
+                <ItemDescription>
+                  {`상품 수: ${item.productQuantity}개 | 총 금액: ${item.productTotalPrice.toLocaleString('ko-KR')}원`}
+                </ItemDescription>
+              </ItemContent>
+              <ItemContent>
+                <ItemActions>
+                  <Button
+                    variant='outline'
+                    className='h-8 w-32 text-sm font-bold transition-all hover:-translate-y-0.5 hover:shadow-md'
+                    onClick={() => {
+                      navigate({
+                        to: `/orders/${order.orderId}`,
+                      });
+                    }}
+                  >
+                    상세 보기
+                  </Button>
+                </ItemActions>
+              </ItemContent>
+            </Item>
+          );
+        })}
       </CardContent>
-
-      <CardFooter className='flex flex-col items-start gap-4'>
-        <button
-          onClick={() => setOpen((prev) => !prev)}
-          className='font-semibold underline'
-        >
-          {open ? '상세 닫기 ▲' : '상세 보기 ▼'}
-        </button>
-        {open && (
-          <div className='mt-4 w-full space-y-2 rounded-lg p-4'>
-            <p>주문번호: {order.orderId}</p>
-            <p>수령인: {order.receiverName}</p>
-            <p>연락처: {formatPhone(order.receiverPhone)}</p>
-            <p>
-              주소: {order.receiverAddr1} {order.receiverAddr2}
-            </p>
-            <p>우편번호: {order.receiverZipcode}</p>
-            <p>결제수단: {order.paymentMethod || '카드'}</p>
-            <p>주문일시: {order.createdAt}</p>
-          </div>
-        )}
-
-        {selectedItem && (
-          <CancelModal
-            isOpen={isOpen}
-            onClose={() => setIsOpen(false)}
-            item={selectedItem}
-            onSubmit={async (reason) => {
-              try {
-                await cancelOrder(order.orderId, {
-                  orderItemId: selectedItem.orderItemId,
-                  reason: reason,
-                });
-                alert('취소 요청이 접수되었습니다.');
-                window.location.reload();
-                setIsOpen(false);
-              } catch {
-                alert('취소 요청 실패');
-              }
-            }}
-          />
-        )}
+      <CardFooter>
+        <div className='flex w-full justify-between'>
+          <span className='text-lg font-bold'>{`총 상품 수: ${order.orderItems.length}개`}</span>
+          <span className='text-lg font-bold'>
+            {`총 주문 금액: ${order.totalPrice.toLocaleString('ko-KR')}원`}
+          </span>
+        </div>
       </CardFooter>
     </Card>
   );

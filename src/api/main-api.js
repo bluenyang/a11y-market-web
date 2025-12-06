@@ -1,11 +1,12 @@
 import axiosInstance from './axios-instance';
 
 export const mainApi = {
-  getEventBanners: () => axiosInstance.get('/v1/main/events'),
+  getEventBanners: async () => await axiosInstance.get('/v1/main/events'),
 
-  getPopularItems: () => axiosInstance.get('/v1/main/products/populars'),
+  getPopularItems: async () => await axiosInstance.get('/v1/main/products/populars'),
 
-  getCategories: () => axiosInstance.get('/v1/main/products/categories'),
+  getCategories: async () => await axiosInstance.get('/v1/main/products/categories'),
 
-  getProductsByCategory: (categoryId) => axiosInstance.get(`/v1/categories/${categoryId}/products`),
+  getProductsByCategory: async (categoryId) =>
+    await axiosInstance.get(`/v1/categories/${categoryId}/products`),
 };

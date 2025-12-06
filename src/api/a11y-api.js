@@ -1,25 +1,13 @@
-// src/api/a11yAPI.js
-
 import axiosInstance from '@/api/axios-instance';
 
-//접근성 프로필 목록 조회
-export async function getA11yProfiles() {
-  const res = await axiosInstance.get(`/v1/users/me/a11y/profiles`);
-  return res.data;
-}
+export const a11yApi = {
+  getA11yProfiles: async () => await axiosInstance.get(`/v1/users/me/a11y/profiles`),
 
-//접근성 프로필 생성
-export async function createA11yProfile(data) {
-  const res = await axiosInstance.post(`/v1/users/me/a11y/profiles`, data);
-  return res.data;
-}
+  createA11yProfile: async (data) => await axiosInstance.post(`/v1/users/me/a11y/profiles`, data),
 
-//접근성 프로필 수정
-export async function updateA11yProfile(profileId, data) {
-  await axiosInstance.put(`/v1/users/me/a11y/profiles/${profileId}`, data);
-}
+  updateA11yProfile: async (profileId, data) =>
+    await axiosInstance.put(`/v1/users/me/a11y/profiles/${profileId}`, data),
 
-//접근성 프로필 삭제
-export async function deleteA11yProfile(profileId) {
-  await axiosInstance.delete(`/v1/users/me/a11y/profiles/${profileId}`);
-}
+  deleteA11yProfile: async (profileId) =>
+    await axiosInstance.delete(`/v1/users/me/a11y/profiles/${profileId}`),
+};

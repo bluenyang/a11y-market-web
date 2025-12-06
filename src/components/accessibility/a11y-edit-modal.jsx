@@ -1,4 +1,4 @@
-import { createA11yProfile, updateA11yProfile } from '@/api/a11y-api';
+import { a11yApi } from '@/api/a11y-api';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -140,10 +140,10 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
       setSaveLoading(true);
 
       if (initialProfile) {
-        await updateA11yProfile(initialProfile.profileId, payload);
+        await a11yApi.updateA11yProfile(initialProfile.profileId, payload);
         alert('프로필이 수정되었습니다.');
       } else {
-        await createA11yProfile(payload);
+        await a11yApi.createA11yProfile(payload);
         alert('프로필이 생성되었습니다.');
       }
 
