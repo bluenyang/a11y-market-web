@@ -88,7 +88,7 @@ function RouteComponent() {
 
       {/* Page Content */}
       <main
-        className='font-kakao-big flex flex-1 flex-col pt-20'
+        className='font-kakao-big flex flex-1 flex-col'
         aria-label='관리자페이지 내용 영역'
       >
         {/* Top NavPathLabel bar */}

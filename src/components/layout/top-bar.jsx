@@ -21,7 +21,6 @@ import { Separator } from '../ui/separator';
 
 export default function TopBar() {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
-  const { itemCount: cartItemCount } = useSelector((state) => state.cart);
   const { categories } = useSelector((state) => state.category);
 
   const dispatch = useDispatch();
@@ -43,6 +42,8 @@ export default function TopBar() {
       navigate({ to: '/' });
     }
   };
+
+  const isAdminPage = router.location.pathname.startsWith('/admin');
 
   const navItemStyle =
     'px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 focus:bg-transparent focus:underline dark:hover:bg-neutral-800';
@@ -92,69 +93,71 @@ export default function TopBar() {
       <Item className='container mx-auto px-4 py-0'>
         <ItemContent className='h-16 flex-row items-center justify-between'>
           <div className='flex items-center gap-4'>
-            <Sheet
-              open={isMobileMenuOpen}
-              onOpenChange={setIsMobileMenuOpen}
-              className='lg:hidden'
-            >
-              <SheetTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='lg:hidden'
-                  aria-label='메뉴 열기'
-                  aria-expanded={isMobileMenuOpen ? 'true' : 'false'}
-                >
-                  <Menu className='size-6' />
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side='left'
-                className='w-64'
+            {!isAdminPage && (
+              <Sheet
+                open={isMobileMenuOpen}
+                onOpenChange={setIsMobileMenuOpen}
+                className='lg:hidden'
               >
-                <SheetHeader>
-                  <SheetTitle>메뉴</SheetTitle>
-                </SheetHeader>
-                <div className='mt-4 w-full'>
-                  <NavigationMenu className='w-full max-w-full p-0'>
-                    <NavigationMenuList className='flex h-full flex-col space-y-2'>
-                      <NavigationMenuItem>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            to={isAuthenticated ? '/logout' : '/login'}
-                            className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
-                          >
-                            {isAuthenticated ? '로그아웃' : '로그인'}
-                          </Link>
-                        </NavigationMenuLink>
-                      </NavigationMenuItem>
-                      <NavigationMenuItem>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            to={isAuthenticated ? '/mypage' : '/join'}
-                            className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
-                          >
-                            {isAuthenticated ? '마이페이지' : '회원가입'}
-                          </Link>
-                        </NavigationMenuLink>
-                      </NavigationMenuItem>
-                      <NavigationMenuItem>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            to='/cart'
-                            className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
-                          >
-                            장바구니
-                          </Link>
-                        </NavigationMenuLink>
-                      </NavigationMenuItem>
-                      <Separator className='my-2 bg-neutral-400' />
-                      {menuItems()}
-                    </NavigationMenuList>
-                  </NavigationMenu>
-                </div>
-              </SheetContent>
-            </Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    className='lg:hidden'
+                    aria-label='메뉴 열기'
+                    aria-expanded={isMobileMenuOpen ? 'true' : 'false'}
+                  >
+                    <Menu className='size-6' />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent
+                  side='left'
+                  className='w-64'
+                >
+                  <SheetHeader>
+                    <SheetTitle>메뉴</SheetTitle>
+                  </SheetHeader>
+                  <div className='mt-4 w-full'>
+                    <NavigationMenu className='w-full max-w-full p-0'>
+                      <NavigationMenuList className='flex h-full flex-col space-y-2'>
+                        <NavigationMenuItem>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to={isAuthenticated ? '/logout' : '/login'}
+                              className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
+                            >
+                              {isAuthenticated ? '로그아웃' : '로그인'}
+                            </Link>
+                          </NavigationMenuLink>
+                        </NavigationMenuItem>
+                        <NavigationMenuItem>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to={isAuthenticated ? '/mypage' : '/join'}
+                              className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
+                            >
+                              {isAuthenticated ? '마이페이지' : '회원가입'}
+                            </Link>
+                          </NavigationMenuLink>
+                        </NavigationMenuItem>
+                        <NavigationMenuItem>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to='/cart'
+                              className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
+                            >
+                              장바구니
+                            </Link>
+                          </NavigationMenuLink>
+                        </NavigationMenuItem>
+                        <Separator className='my-2 bg-neutral-400' />
+                        {menuItems()}
+                      </NavigationMenuList>
+                    </NavigationMenu>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
             <Link
               to='/'
               className='flex items-center gap-2'
@@ -228,11 +231,13 @@ export default function TopBar() {
           </Item>
         </ItemContent>
       </Item>
-      <NavigationMenu className='hidden max-w-full border-t bg-neutral-50 lg:block dark:bg-neutral-800'>
-        <NavigationMenuList className='container mx-auto justify-start px-4 py-2'>
-          {menuItems()}
-        </NavigationMenuList>
-      </NavigationMenu>
+      {!isAdminPage && (
+        <NavigationMenu className='hidden max-w-full border-t bg-neutral-50 lg:block dark:bg-neutral-800'>
+          <NavigationMenuList className='container mx-auto justify-start px-4 py-2'>
+            {menuItems()}
+          </NavigationMenuList>
+        </NavigationMenu>
+      )}
     </header>
   );
 }
