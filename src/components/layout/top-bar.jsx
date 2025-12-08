@@ -1,6 +1,5 @@
 // import { logout } from '@/store/slices/authSlice';
 import { authApi } from '@/api/auth-api';
-import { cartApi } from '@/api/cart-api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Item, ItemContent } from '@/components/ui/item';
@@ -12,6 +11,7 @@ import {
 } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { logout } from '@/store/auth-slice';
+import { fetchCartCount } from '@/store/cart-slice';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { LogIn, LogOut, Menu, Search, ShoppingCart, User, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -21,10 +21,17 @@ import { Separator } from '../ui/separator';
 
 export default function TopBar() {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { itemCount: cartItemCount } = useSelector((state) => state.cart);
+  const { categories } = useSelector((state) => state.category);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const router = useRouterState();
+
+  useEffect(() => {
+    // pathname이 변경될 때마다 실행
+    setIsMobileMenuOpen(false);
+  }, [router.location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -37,100 +44,46 @@ export default function TopBar() {
     }
   };
 
-  useEffect(() => {
-    // pathname이 변경될 때마다 실행
-    setIsMobileMenuOpen(false);
-  }, [router.location.pathname]);
+  const navItemStyle =
+    'px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 focus:bg-transparent focus:underline dark:hover:bg-neutral-800';
 
-  const menuItems = () => (
-    <>
-      <NavigationMenuItem>
-        <NavigationMenuLink asChild>
-          <Link
-            to='/products'
-            className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
-          >
-            전체 카테고리
-          </Link>
-        </NavigationMenuLink>
-      </NavigationMenuItem>
-      <NavigationMenuItem>
-        <NavigationMenuLink asChild>
-          <Link
-            to='/'
-            className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
-          >
-            {'디지털/가전'}
-          </Link>
-        </NavigationMenuLink>
-      </NavigationMenuItem>
-      <NavigationMenuItem>
-        <NavigationMenuLink asChild>
-          <Link
-            to='/'
-            className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
-          >
-            {'패션/의류'}
-          </Link>
-        </NavigationMenuLink>
-      </NavigationMenuItem>
-      <NavigationMenuItem>
-        <NavigationMenuLink asChild>
-          <Link
-            to='/'
-            className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
-          >
-            건강
-          </Link>
-        </NavigationMenuLink>
-      </NavigationMenuItem>
-      <NavigationMenuItem>
-        <NavigationMenuLink asChild>
-          <Link
-            to='/'
-            className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
-          >
-            스포츠
-          </Link>
-        </NavigationMenuLink>
-      </NavigationMenuItem>
-      <NavigationMenuItem>
-        <NavigationMenuLink asChild>
-          <Link
-            to='/'
-            className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
-          >
-            식품
-          </Link>
-        </NavigationMenuLink>
-      </NavigationMenuItem>
-      <NavigationMenuItem>
-        <NavigationMenuLink asChild>
-          <Link
-            to='/'
-            className='px-4 py-2 text-base font-bold hover:bg-white hover:underline hover:underline-offset-4 dark:hover:bg-neutral-800'
-          >
-            도서
-          </Link>
-        </NavigationMenuLink>
-      </NavigationMenuItem>
-    </>
-  );
+  const menuItems = () => {
+    return (
+      <>
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild>
+            <Link
+              to='/products'
+              className={navItemStyle}
+            >
+              전체 카테고리
+            </Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        {categories.map((category) => (
+          <NavigationMenuItem key={category.categoryId}>
+            <NavigationMenuLink asChild>
+              <Link
+                to='/products'
+                search={{ categoryId: category.categoryId }}
+                className={navItemStyle}
+              >
+                {category.categoryName}
+              </Link>
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+        ))}
+      </>
+    );
+  };
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [cartItemCount, setCartItemCount] = useState(0);
 
   useEffect(() => {
     // 장바구니 아이템 수 가져오기
-    const fetchCartItems = async () => {
-      const resp = await cartApi.getCartItemCount();
-      setCartItemCount(resp.data?.count);
-    };
 
     if (isAuthenticated) {
-      fetchCartItems();
-    } else {
-      setCartItemCount(0);
+      dispatch(fetchCartCount());
     }
   }, [isAuthenticated]);
 

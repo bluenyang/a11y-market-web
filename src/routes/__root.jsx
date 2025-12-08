@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { Spinner } from '@/components/ui/spinner';
 import { useA11yEffect } from '@/hooks/use-a11y-effect';
 import { useAuthInit } from '@/hooks/use-auth-init';
+import { useCategory } from '@/hooks/use-category';
 import useA11yStorage from '@/hooks/user-a11y-storage';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
@@ -19,6 +20,7 @@ function Root() {
   useAuthInit();
   useA11yStorage();
   useA11yEffect();
+  useCategory();
 
   const isLoading = useSelector((state) => state.auth.isLoading);
 

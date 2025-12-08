@@ -1,4 +1,5 @@
 import { productApi } from '@/api/product-api';
+import { LoadingEmpty } from '@/components/main/loading-empty';
 import { ProductCard } from '@/components/main/product-card';
 import { ProductFilter } from '@/components/product/product-filter';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,12 @@ import { toast } from 'sonner';
 
 export const Route = createFileRoute('/products/')({
   component: RouteComponent,
+  validateSearch: (search) => ({
+    searchQuery: typeof search.searchQuery === 'string' ? search.searchQuery : '',
+    categoryId: typeof search.categoryId === 'string' ? search.categoryId : '',
+    isA11yGuaranteed: search.isA11yGuaranteed === 'true',
+    sellerGrade: typeof search.sellerGrade === 'string' ? search.sellerGrade : '',
+  }),
 });
 
 const sortOptions = [
@@ -25,28 +32,40 @@ const sortOptions = [
 ];
 
 function RouteComponent() {
+  const { searchQuery, categoryId, isA11yGuaranteed, sellerGrade } = Route.useSearch();
+
   const [products, setProducts] = useState([]);
   const [filters, setFilters] = useState({
-    searchQuery: '',
-    categories: [],
+    searchQuery: searchQuery,
+    categories: [...categoryId],
+    isA11yGuaranteed: isA11yGuaranteed,
+    sellerGrade: sellerGrade,
     priceRange: [0, 1000000],
-    minRating: 0,
   });
   const [sortBy, setSortBy] = useState('popular');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
+      setIsLoading(true);
       try {
-        const resp = await productApi.getProducts();
+        const resp = await productApi.getProducts({
+          search: searchQuery,
+          categoryId: categoryId,
+          certified: isA11yGuaranteed,
+          grade: sellerGrade,
+        });
         if (resp.status === 200) {
           setProducts(resp.data);
         }
       } catch (error) {
         console.error('Failed to fetch products:', error);
         toast.error('상품을 불러오는 데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
       }
     })();
-  }, []);
+  }, [searchQuery, categoryId, isA11yGuaranteed, sellerGrade]);
 
   const filteredProducts = products.filter((product) => {
     if (filters.searchQuery) {
@@ -118,7 +137,9 @@ function RouteComponent() {
             </div>
 
             {/* 상품 그리드 */}
-            {sortedProducts.length > 0 ? (
+            {isLoading ? (
+              <LoadingEmpty />
+            ) : sortedProducts.length > 0 ? (
               <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'>
                 {sortedProducts.map((product) => (
                   <ProductCard
