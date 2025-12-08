@@ -25,7 +25,11 @@ export const AddCartButton = ({ product, quantity = 1, className = '' }) => {
         setAdded(true);
         dispatch(fetchCartCount());
       }
-    } catch (error) {
+    } catch (err) {
+      if (err.error === 'Unauthorized') {
+        toast.error('장바구니에 추가하려면 로그인이 필요합니다.');
+        return;
+      }
       toast.error('장바구니에 추가하는 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);

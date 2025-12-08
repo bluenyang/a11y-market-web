@@ -4,25 +4,41 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Search, X } from 'lucide-react';
 import { useState } from 'react';
-
-const categories = [
-  { id: 'fashion', name: '패션' },
-  { id: 'electronics', name: '전자기기' },
-  { id: 'home', name: '홈·리빙' },
-  { id: 'beauty', name: '뷰티' },
-];
-
-const ratings = [
-  { value: 4.5, label: '4.5★ 이상' },
-  { value: 4.0, label: '4.0★ 이상' },
-  { value: 3.5, label: '3.5★ 이상' },
-  { value: 3.0, label: '3.0★ 이상' },
-];
+import { useSelector } from 'react-redux';
 
 export const ProductFilter = ({ onFilterChange }) => {
+  const { categories } = useSelector((state) => state.category);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [minRating, setMinRating] = useState(0);
+
+  const handleParentCategoryToggle = (parendCategoryId) => {
+    const subCategories =
+      categories
+        .find((cat) => cat.categoryId === parendCategoryId)
+        ?.subCategories.map((subCat) => subCat.categoryId) || [];
+
+    const isParentSelected = selectedCategories.includes(parendCategoryId);
+    let newCategories = [];
+
+    if (isParentSelected) {
+      // 부모 카테고리가 선택된 경우, 부모와 하위 카테고리 모두 선택 해제
+      newCategories = selectedCategories.filter(
+        (id) => id !== parendCategoryId && !subCategories.includes(id),
+      );
+    } else {
+      // 부모 카테고리가 선택되지 않은 경우, 부모와 하위 카테고리 모두 선택
+      newCategories = [
+        ...selectedCategories,
+        parendCategoryId,
+        ...subCategories.filter((id) => !selectedCategories.includes(id)),
+      ];
+    }
+
+    setSelectedCategories(newCategories);
+    applyFilters(searchQuery, newCategories, minRating);
+  };
 
   const handleCategoryToggle = (categoryId) => {
     const newCategories = selectedCategories.includes(categoryId)
@@ -31,12 +47,6 @@ export const ProductFilter = ({ onFilterChange }) => {
 
     setSelectedCategories(newCategories);
     applyFilters(searchQuery, newCategories, minRating);
-  };
-
-  const handleRatingChange = (rating) => {
-    const newRating = minRating === rating ? 0 : rating;
-    setMinRating(newRating);
-    applyFilters(searchQuery, selectedCategories, newRating);
   };
 
   const handleSearchChange = (e) => {
@@ -107,7 +117,51 @@ export const ProductFilter = ({ onFilterChange }) => {
       <div className='space-y-3'>
         <Label>카테고리</Label>
         <div className='space-y-2'>
-          {categories.map((category) => (
+          {categories.map((category) => {
+            const subCategories = category.subCategories || [];
+            return (
+              <div
+                key={category.id}
+                className='space-y-1'
+              >
+                <div className='flex items-center gap-2'>
+                  <Checkbox
+                    id={`category-${category.categoryId}`}
+                    checked={selectedCategories.includes(category.categoryId)}
+                    onCheckedChange={() => handleParentCategoryToggle(category.categoryId)}
+                  />
+                  <Label
+                    htmlFor={`category-${category.categoryId}`}
+                    className='cursor-pointer font-medium'
+                  >
+                    {category.categoryName}
+                  </Label>
+                </div>
+                {/* 하위 카테고리 */}
+                <div className='ml-6 space-y-1'>
+                  {subCategories.map((subCat) => (
+                    <div
+                      key={subCat.categoryId}
+                      className='flex items-center gap-2'
+                    >
+                      <Checkbox
+                        id={`subcategory-${subCat.categoryId}`}
+                        checked={selectedCategories.includes(subCat.categoryId)}
+                        onCheckedChange={() => handleCategoryToggle(subCat.categoryId)}
+                      />
+                      <Label
+                        htmlFor={`subcategory-${subCat.categoryId}`}
+                        className='cursor-pointer'
+                      >
+                        {subCat.categoryName}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          {/* {categories.map((category) => (
             <div
               key={category.id}
               className='flex items-center gap-2'
@@ -124,7 +178,7 @@ export const ProductFilter = ({ onFilterChange }) => {
                 {category.name}
               </Label>
             </div>
-          ))}
+          ))} */}
         </div>
       </div>
     </div>

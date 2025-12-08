@@ -25,6 +25,7 @@ export const Route = createFileRoute('/products/')({
 });
 
 const sortOptions = [
+  { value: 'on-development', label: '개발 중' },
   { value: 'popular', label: '인기순' },
   { value: 'newest', label: '신상품순' },
   { value: 'price-asc', label: '낮은 가격순' },
@@ -42,7 +43,7 @@ function RouteComponent() {
     sellerGrade: sellerGrade,
     priceRange: [0, 1000000],
   });
-  const [sortBy, setSortBy] = useState('popular');
+  const [sortBy, setSortBy] = useState('on-development');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -77,7 +78,7 @@ function RouteComponent() {
         return false;
       }
     }
-    if (filters.categories.length > 0 && !filters.categories.includes(product.categoryID)) {
+    if (filters.categories.length > 0 && !filters.categories.includes(product.categoryId)) {
       return false;
     }
     return true;
@@ -118,6 +119,7 @@ function RouteComponent() {
               <Select
                 value={sortBy}
                 onValueChange={setSortBy}
+                disabled
               >
                 <SelectTrigger className='w-[180px]'>
                   <SelectValue placeholder='정렬 기준' />

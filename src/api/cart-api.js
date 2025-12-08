@@ -7,6 +7,7 @@ export const cartApi = {
       return resp;
     } catch (err) {
       console.error('Failed to get cart items:', err);
+      return Promise.reject(err);
     }
   },
 
@@ -16,6 +17,7 @@ export const cartApi = {
       return resp;
     } catch (err) {
       console.error('Failed to get cart item number:', err);
+      return Promise.reject(err);
     }
   },
 
@@ -30,6 +32,7 @@ export const cartApi = {
       }
     } catch (err) {
       console.error('Failed to add cart item:', err);
+      return Promise.reject(err);
     }
   },
 
@@ -45,6 +48,7 @@ export const cartApi = {
       }
     } catch (err) {
       console.error('Failed to update cart item quantity:', err);
+      return Promise.reject(err);
     }
   },
 
@@ -58,6 +62,7 @@ export const cartApi = {
       return resp;
     } catch (err) {
       console.error('Failed to delete cart items:', err);
+      return Promise.reject(err);
     }
   },
 };
