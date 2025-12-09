@@ -211,6 +211,10 @@ function RouteComponent() {
               <TabsContent value='address'>
                 <AddressManager />
               </TabsContent>
+
+              <TabsContent value='a11y'>
+                <A11ySettingsPage />
+              </TabsContent>
             </div>
           </div>
         </Tabs>
