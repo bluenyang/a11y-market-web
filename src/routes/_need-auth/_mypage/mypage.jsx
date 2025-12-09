@@ -1,6 +1,7 @@
 import { userApi } from '@/api/user-api';
 import { AccountInfo } from '@/components/mypage/AccounInfo';
 import { OrderHistory } from '@/components/mypage/OrderHistory';
+import A11ySettingsPage from './mypage/a11y';
 import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -200,6 +201,10 @@ function RouteComponent() {
 
               <TabsContent value='order'>
                 <OrderHistory />
+              </TabsContent>
+
+              <TabsContent value='a11y'>
+                <A11ySettingsPage />
               </TabsContent>
             </div>
           </div>

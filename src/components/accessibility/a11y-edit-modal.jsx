@@ -7,6 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Field, FieldGroup } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -19,7 +21,8 @@ import {
   toggleScreenReader,
   toggleSmartContrast,
 } from '@/store/a11y-slice';
-import { useEffect, useState } from 'react';
+
+import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 function StepSelector({ value, max, onChange }) {
@@ -90,20 +93,13 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
   const [description, setDescription] = useState('');
   const [saveLoading, setSaveLoading] = useState(false);
 
-  const {
-    contrastLevel,
-    textSizeLevel,
-    textSpacingLevel,
-    lineHeightLevel,
-    textAlign,
-    screenReader,
-    smartContrast,
-    highlightLinks,
-    cursorHighlight,
-  } = useSelector((state) => state.a11y);
+  const a11yState = useSelector((state) => state.a11y);
+  const prevRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
+
+    prevRef.current = a11yState;
 
     if (initialProfile) {
       setProfileName(initialProfile.profileName);
@@ -125,15 +121,7 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
     const payload = {
       profileName: profileName.trim(),
       description: description.trim() || null,
-      contrastLevel,
-      textSizeLevel,
-      textSpacingLevel,
-      lineHeightLevel,
-      textAlign,
-      screenReader,
-      smartContrast,
-      highlightLinks,
-      cursorHighlight,
+      ...a11yState,
     };
 
     try {
@@ -150,20 +138,20 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
       onSaved && onSaved();
       onClose();
     } catch (err) {
-      const status = err?.response?.status;
-      const serverMessage = err?.response?.data?.message || err?.response?.data?.errorMessage;
-
-      if (status === 400 || status === 409) {
-        alert(serverMessage || '이미 존재하는 프로필 이름입니다.');
-      } else {
-        alert('프로필 저장 중 오류가 발생했습니다.');
-      }
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.errorMessage ||
+        '프로필 저장 중 오류가 발생했습니다.';
+      alert(message);
     } finally {
       setSaveLoading(false);
     }
   };
 
   const handleClose = () => {
+    if (prevRef.current) {
+      dispatch(setAllA11y(prevRef.current));
+    }
     onClose();
   };
 
@@ -173,6 +161,7 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
       onOpenChange={onClose}
     >
       <DialogContent className='max-w-md'>
+        <ScrollArea className='max-h-[80vh] px-6 py-4'>
         <DialogHeader>
           <DialogTitle className='text-lg font-bold'>
             {initialProfile ? '접근성 프로필 수정' : '접근성 프로필 생성'}
@@ -184,27 +173,29 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
           onSubmit={handleSubmit}
         >
           {/* 프로필 기본 정보 */}
-          <div className='space-y-3'>
-            <div>
-              <Label className='block text-sm font-medium'>프로필 이름 *</Label>
+          <FieldGroup className='space-y-4'>
+            <Field>
+              <Label htmlFor='profileName'>프로필 이름 *</Label>
               <Input
+                id='profileName'
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
                 placeholder='예: 시력 저하용, 고대비용 등'
                 required
               />
-            </div>
+            </Field>
 
-            <div>
-              <Label className='block text-sm font-medium'>설명 (선택)</Label>
+            <Field>
+              <Label htmlFor='description'>설명 (선택)</Label>
               <Textarea
+                id='description'
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder='프로필에 대한 메모를 남길 수 있습니다.'
                 rows={2}
               />
-            </div>
-          </div>
+            </Field>
+          </FieldGroup>
 
           {/* 접근성 옵션 편집 영역 */}
           <div className='space-y-4 rounded-md border p-4'>
@@ -214,7 +205,7 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
               label='스크린 리더'
               control={
                 <Switch
-                  checked={screenReader}
+                  checked={a11yState.screenReader}
                   onCheckedChange={() => dispatch(toggleScreenReader())}
                 />
               }
@@ -224,22 +215,8 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
               label='대비 모드'
               control={
                 <ContrastSelector
-                  value={contrastLevel}
-                  onChange={(v) =>
-                    dispatch(
-                      setAllA11y({
-                        contrastLevel: v,
-                        textSizeLevel,
-                        textSpacingLevel,
-                        lineHeightLevel,
-                        textAlign,
-                        screenReader,
-                        smartContrast,
-                        highlightLinks,
-                        cursorHighlight,
-                      }),
-                    )
-                  }
+                  value={a11yState.contrastLevel}
+                  onChange={(v) => dispatch(setAllA11y({ ...a11yState, contrastLevel: v }))}
                 />
               }
             />
@@ -248,7 +225,7 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
               label='스마트 대비'
               control={
                 <Switch
-                  checked={smartContrast}
+                  checked={a11yState.smartContrast}
                   onCheckedChange={() => dispatch(toggleSmartContrast())}
                 />
               }
@@ -258,23 +235,9 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
               label='글자 크기'
               control={
                 <StepSelector
-                  value={textSizeLevel}
+                  value={a11yState.textSizeLevel}
                   max={2}
-                  onChange={(v) =>
-                    dispatch(
-                      setAllA11y({
-                        contrastLevel,
-                        textSizeLevel: v,
-                        textSpacingLevel,
-                        lineHeightLevel,
-                        textAlign,
-                        screenReader,
-                        smartContrast,
-                        highlightLinks,
-                        cursorHighlight,
-                      }),
-                    )
-                  }
+                  onChange={(v) => dispatch(setAllA11y({ ...a11yState, textSizeLevel: v }))}
                 />
               }
             />
@@ -283,23 +246,9 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
               label='글자 간격'
               control={
                 <StepSelector
-                  value={textSpacingLevel}
+                  value={a11yState.textSpacingLevel}
                   max={2}
-                  onChange={(v) =>
-                    dispatch(
-                      setAllA11y({
-                        contrastLevel,
-                        textSizeLevel,
-                        textSpacingLevel: v,
-                        lineHeightLevel,
-                        textAlign,
-                        screenReader,
-                        smartContrast,
-                        highlightLinks,
-                        cursorHighlight,
-                      }),
-                    )
-                  }
+                  onChange={(v) => dispatch(setAllA11y({ ...a11yState, textSpacingLevel: v }))}
                 />
               }
             />
@@ -308,23 +257,9 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
               label='줄 간격'
               control={
                 <StepSelector
-                  value={lineHeightLevel}
+                  value={a11yState.lineHeightLevel}
                   max={2}
-                  onChange={(v) =>
-                    dispatch(
-                      setAllA11y({
-                        contrastLevel,
-                        textSizeLevel,
-                        textSpacingLevel,
-                        lineHeightLevel: v,
-                        textAlign,
-                        screenReader,
-                        smartContrast,
-                        highlightLinks,
-                        cursorHighlight,
-                      }),
-                    )
-                  }
+                  onChange={(v) => dispatch(setAllA11y({ ...a11yState, lineHeightLevel: v }))}
                 />
               }
             />
@@ -338,27 +273,12 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
                       type='button'
                       variant='outline'
                       key={opt}
-                      onClick={() =>
-                        dispatch(
-                          setAllA11y({
-                            contrastLevel,
-                            textSizeLevel,
-                            textSpacingLevel,
-                            lineHeightLevel,
-                            textAlign: opt,
-                            screenReader,
-                            smartContrast,
-                            highlightLinks,
-                            cursorHighlight,
-                          }),
-                        )
-                      }
-                      className={
-                        'rounded-md px-3 py-1 text-xs ' +
-                        (textAlign === opt
+                      onClick={() => dispatch(setAllA11y({ ...a11yState, textAlign: opt }))}
+                      className={`rounded-md px-3 py-1 text-xs ${
+                        a11yState.textAlign === opt
                           ? 'border-black bg-black text-white'
-                          : 'border-gray-300 text-gray-700')
-                      }
+                          : 'border-gray-300 text-gray-700'
+                      }`}
                     >
                       {opt}
                     </Button>
@@ -371,7 +291,7 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
               label='링크 강조'
               control={
                 <Switch
-                  checked={highlightLinks}
+                  checked={a11yState.highlightLinks}
                   onCheckedChange={() => dispatch(toggleHighlightLinks())}
                 />
               }
@@ -381,7 +301,7 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
               label='마우스 커서 강조'
               control={
                 <Switch
-                  checked={cursorHighlight}
+                  checked={a11yState.cursorHighlight}
                   onCheckedChange={() => dispatch(toggleCursorHighlight())}
                 />
               }
@@ -413,6 +333,7 @@ export default function A11yEditModal({ open, onClose, initialProfile, onSaved }
             </Button>
           </DialogFooter>
         </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
