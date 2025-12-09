@@ -34,12 +34,12 @@ export default function TopBar() {
 
   const handleLogout = async () => {
     try {
+      navigate({ to: '/' });
       await authApi.logout();
     } catch (err) {
       console.warn('Logout API call failed:', err);
     } finally {
       dispatch(logout());
-      navigate({ to: '/' });
     }
   };
 
