@@ -18,42 +18,55 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
 
-export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelectedItems }) => {
+export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelectedItems, onChangeQuantity, }) => {
   const [data, setData] = useState(groupData.items);
-
   const dispatch = useDispatch();
 
-  const handleSelectItem = (item, isSelected) => {
+  const handleSelectItem = (cartItemId, isSelected) => {
     setSelectedItems((prevSelectedItems) => {
       const updatedSelectedItems = new Set(prevSelectedItems);
       if (isSelected) {
-        updatedSelectedItems.add(item);
+        updatedSelectedItems.add(cartItemId);
       } else {
-        updatedSelectedItems.delete(item);
+        updatedSelectedItems.delete(cartItemId);
       }
       return updatedSelectedItems;
     });
   };
 
+  //판매자 그룹 안에서만 동작하도록 수정
   const handleSelectAll = (isSelected) => {
-    setSelectedItems((prevSelectedItems) => {
-      const updatedSelectedItems = new Set(prevSelectedItems);
-      data.forEach((item) => {
-        if (isSelected) {
-          updatedSelectedItems.add(item);
-        } else {
-          updatedSelectedItems.delete(item);
-        }
+    if(isSelected) {
+      const allIds = data.map((item) => item.cartItemId);
+      
+      setSelectedItems(prev => {
+        const updated = new Set(prev);
+        allIds.forEach(id => updated.add(id));
+        return updated;
       });
-      return updatedSelectedItems;
-    });
+
+    } else {
+      const allIds = data.map((item) => item.cartItemId);
+
+      setSelectedItems(prev => {
+        const updated = new Set(prev);
+        allIds.forEach(id => updated.delete(id));
+        return updated;
+      })
+    }
   };
 
   const handleChangeQuantity = async (index, cartItemId, amount) => {
     const oldData = data[index];
+    const newQty = oldData.quantity + amount;
+
+    if (newQty < 1) return;
+
     const newData = [...data];
-    newData[index].quantity += amount;
+    newData[index] = { ...oldData, quantity: newQty };
     setData(newData);
+
+    onChangeQuantity(cartItemId, newQty);
 
     try {
       const resp = await cartApi.updateCartItemQuantity(cartItemId, newData[index].quantity);
@@ -64,9 +77,12 @@ export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelected
     } catch (err) {
       console.error('Failed to update cart item quantity:', err);
       toast.error('장바구니 아이템 수량 업데이트에 실패했습니다. 잠시 후 다시 시도해주세요.');
+
       const revertedData = [...data];
-      revertedData[index].quantity = oldData.quantity;
+      revertedData[index] = oldData;
       setData(revertedData);
+
+      onChangeQuantity(cartItemId, oldData.quantity);
     }
   };
 
@@ -80,7 +96,20 @@ export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelected
         throw new Error('Failed to delete cart items');
       }
       setData(newData);
+
+      setSelectedItems((prev) => {
+        const updated = new Set();
+        prev.forEach((id) => {
+          if (!removedItems.some((r) => r.cartItemId === id)) {
+            updated.add(id);
+          }
+        });
+        return updated;
+      });
+
       dispatch(fetchCartCount());
+
+      toast.success('상품이 삭제되었습니다.');
 
       if (newData.length === 0) {
         // 현재 컴포넌트를 렌더링하는 상위 컴포넌트에서 이 그룹을 제거하도록 알림
@@ -92,26 +121,14 @@ export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelected
     }
   };
 
-  useEffect(() => {
-    data.forEach((item) => {
-      if (!selectedItems.has(item)) {
-        setSelectedItems((prevSelectedItems) => {
-          const updatedSelectedItems = new Set(prevSelectedItems);
-          updatedSelectedItems.add(item);
-          return updatedSelectedItems;
-        });
-      }
-    });
-  }, []);
-
   return (
-    <div className='w-full overflow-hidden rounded-md border bg-neutral-50'>
+    <div className='bg-card text-card-foreground w-full overflow-hidden rounded-md border'>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className='w-[5%] py-4 text-center'>
               <Checkbox
-                checked={data.every((item) => selectedItems.has(item))}
+                checked={data.every((item) => selectedItems.has(item.cartItemId))}
                 onCheckedChange={handleSelectAll}
                 className='size-6'
               />
@@ -139,21 +156,28 @@ export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelected
             <TableRow key={item.cartItemId}>
               <TableCell className='w-[5%] text-center'>
                 <Checkbox
-                  checked={selectedItems.has(item)}
-                  onCheckedChange={(isSelected) => handleSelectItem(item, isSelected)}
+                  checked={selectedItems.has(item.cartItemId)}
+                  onCheckedChange={(isSelected) => handleSelectItem(item.cartItemId, isSelected)}
                   className='size-6'
                 />
               </TableCell>
               <TableCell className='w-[10%]'>
-                <ImageWithFallback
-                  src={item.productImageUrl}
-                  alt={item.productName}
-                  className='h-16 w-24 object-cover'
-                />
+                <a
+                  href={`/products/${item.productId}`}
+                  className='block'
+                >
+                  <ImageWithFallback
+                    src={item.productImageUrl}
+                    alt={item.productName}
+                    className='aspect-4/3 w-28 rounded-md object-cover'
+                  />
+                </a>
               </TableCell>
               <TableCell className='w-[40%]'>
                 <div className='flex flex-col gap-2'>
-                  <span className='text-lg font-bold'>{item.productName}</span>
+                  <span className='line-clamp-1 overflow-hidden text-lg font-bold text-ellipsis whitespace-nowrap'>
+                    {item.productName}
+                  </span>
                 </div>
               </TableCell>
               <TableCell className='w-[15%] text-center'>
@@ -166,7 +190,7 @@ export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelected
                     <MinusIcon className='size-4' />
                   </Button>
                   <Input
-                    className='w-8 bg-white p-0 text-center'
+                    className='bg-card text-card-foreground w-8 p-0 text-center'
                     value={item.quantity}
                     readOnly
                   />
@@ -185,7 +209,7 @@ export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelected
               <TableCell className='w-[10%] text-center'>
                 <Button
                   variant='ghost'
-                  className='size-12 text-black hover:bg-neutral-200 hover:text-red-500'
+                  className='text-foreground size-12 hover:bg-neutral-200 hover:text-red-500 dark:hover:bg-neutral-700'
                   onClick={() => handleDelete(index)}
                 >
                   <TrashIcon className='size-6' />

@@ -46,6 +46,17 @@ function CartPage() {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    const stored = localStorage.getItem('selectedItems');
+    if (stored) {
+      setSelectedItems(new Set(JSON.parse(stored)));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('selectedItems', JSON.stringify(Array.from(selectedItems)));
+  }, [selectedItems]);
+
+  useEffect(() => {
     const fetchCartData = async () => {
       setFetching(true);
       try {
@@ -56,7 +67,7 @@ function CartPage() {
         }
 
         setCartGroups(resp.data);
-        setTotalPrice(resp.data?.total || 0);
+        // setTotalPrice(resp.data?.total || 0);
       } catch (error) {
         console.error('Failed to fetch cart items:', error);
         toast.error('장바구니 정보를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
@@ -68,28 +79,28 @@ function CartPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedItems.size === 0 || !cartGroups.items) {
-      setTotalPrice(0);
-      return;
-    }
+    if (!cartGroups.items) return;
 
-    const calculateTotalPrice = () => {
-      const filteredItems = Array.from(selectedItems);
+    let total = 0;
 
-      const total = filteredItems?.reduce((acc, item) => {
-        return acc + item.productPrice * item.quantity;
-      }, 0);
+    cartGroups.items.forEach((group) => {
+      group.items.forEach((item) => {
+        if (selectedItems.has(item.cartItemId)) {
+          total += item.productPrice * item.quantity;
+        }
+      });
+    });
 
-      setTotalPrice(total);
-    };
-    calculateTotalPrice();
+    setTotalPrice(total);
   }, [cartGroups, selectedItems]);
 
   const handleOrder = async (type) => {
     setSubmitType(type);
 
+    const selectedIds = Array.from(selectedItems);
+
     const options = {
-      selectedItems: Array.from(selectedItems).map((item) => item.cartItemId),
+      selectedItems: selectedIds,
       orderAllItems: type === 'all',
     };
 
@@ -108,7 +119,7 @@ function CartPage() {
         return;
       }
 
-      dispatch(setOrderItems(Array.from(selectedItems)));
+      dispatch(setOrderItems(selectedIds));
       navigate({
         to: '/order/checkout',
       });
@@ -122,6 +133,19 @@ function CartPage() {
   const handleOnDeleteGroup = (sellerId) => {
     const updatedGroups = cartGroups.items.filter((group) => group.sellerId !== sellerId);
     setCartGroups((prev) => ({ ...prev, items: updatedGroups }));
+  };
+
+  const handleUpdateQuantity = (cartItemId, newQty) => {
+    setCartGroups((prev) => {
+      const newGroups = { ...prev };
+      newGroups.items = newGroups.items.map((group) => ({
+        ...group,
+        items: group.items.map((item) =>
+          item.cartItemId === cartItemId ? { ...item, quantity: newQty } : item,
+        ),
+      }));
+      return newGroups;
+    });
   };
 
   if (fetching) {
@@ -140,7 +164,7 @@ function CartPage() {
             <EmptyHeader>
               <EmptyMedia
                 variant='icon'
-                className='mb-0 flex size-24 rounded-full bg-neutral-200'
+                className='mb-0 flex size-24 rounded-full bg-neutral-200 dark:bg-neutral-800'
               >
                 <Icon
                   icon='mdi:cart'
@@ -188,6 +212,7 @@ function CartPage() {
                 onGroupDelete={handleOnDeleteGroup}
                 selectedItems={selectedItems}
                 setSelectedItems={setSelectedItems}
+                onChangeQuantity={handleUpdateQuantity}
               />
             ))}
           </section>
@@ -201,7 +226,7 @@ function CartPage() {
             </Alert>
           </section>
           <section className='w-full'>
-            <Card className='bg-neutral-100 p-4'>
+            <Card className='bg-card text-card-foreground p-4'>
               <Item className='flex flex-col items-end gap-4'>
                 <div className='flex flex-col items-end gap-2'>
                   <span className='text-muted-foreground text-sm'>선택된 상품</span>
