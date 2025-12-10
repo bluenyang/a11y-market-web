@@ -42,7 +42,7 @@ function RouteComponent() {
       <div className='font-kakao-big mb-10 text-center text-3xl font-semibold'>관리자페이지</div>
 
       <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-        <Card className='bg-white shadow-md'>
+        <Card className='shadow-md'>
           <CardContent>
             <div className='font-kakao-big mb-2 text-lg font-medium'>승인 대기 판매자</div>
             <div className='font-kakao-big text-gray-600'>
@@ -60,7 +60,7 @@ function RouteComponent() {
           </CardFooter>
         </Card>
 
-        <Card className='bg-white shadow-md'>
+        <Card className='shadow-md'>
           <CardContent>
             <div className='font-kakao-big mb-2 text-lg font-medium'>미승인 상품</div>
             <div className='font-kakao-big text-gray-600'>

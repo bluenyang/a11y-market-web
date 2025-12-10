@@ -34,8 +34,8 @@ axiosInstance.interceptors.response.use(
   async (err) => {
     const originalRequest = err.config;
     if (err.response) {
-      // 401 Unauthorized 공통 처리 예시
-      if (err.response.status === 401 && !originalRequest._retry) {
+      // 403 Forbidden 공통 처리 예시
+      if (err.response.status === 403 && !originalRequest._retry) {
         originalRequest._retry = true;
 
         try {

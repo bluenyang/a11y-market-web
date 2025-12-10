@@ -1,3 +1,10 @@
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import { ROLES } from '@/constants/roles';
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
@@ -20,19 +27,17 @@ function RouteComponent() {
   const menuItems = [
     { label: '대시보드', path: '/admin' },
     { label: '회원 관리', path: '/admin/users' },
-    { label: '판매자 관리', path: '/admin/sellers' },
+    { label: '판매자 승인 관리', path: '/admin/sellers' },
     { label: '상품 승인 관리', path: '/admin/products' },
     { label: '주문 관리', path: '/admin/orders' },
     { label: '접근성 인증 관리', path: '/admin/accessibility' },
   ];
 
   // functions
-  // 내비게이션 경로 표시 상단바
-  const navPathLabel = () => {
+  const getPathLabel = () => {
     const item = menuItems.find((m) => m.path === currentPath);
-    const base = 'A11y Market > 관리자페이지';
-    if (!item) return base;
-    return `${base} > ${item.label}`;
+    if (!item) return '';
+    return item.label;
   };
 
   // render
@@ -78,7 +83,7 @@ function RouteComponent() {
                       {active && (
                         <motion.div
                           layoutId='active-menu-indicator'
-                          className='absolute inset-0 z-10 rounded bg-gray-200 shadow-md'
+                          className='absolute inset-0 z-10 rounded-lg bg-neutral-200 shadow-md dark:bg-neutral-700'
                           initial={false}
                           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                         />
@@ -98,12 +103,34 @@ function RouteComponent() {
         aria-label='관리자페이지 내용 영역'
       >
         {/* Top NavPathLabel bar */}
-        <div className='font-kakao-big mb-4 w-full border-b border-gray-300 bg-gray-100 px-6 py-3 font-medium text-gray-800'>
-          {navPathLabel()}
+        <div className='mb-4 w-full border-b border-neutral-500 px-6 py-3 font-bold'>
+          <Breadcrumb aria-label='현재 페이지 경로'>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to='/'>
+                    <span className='text-primary text-base hover:underline'>A11yMARKET</span>
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to='/admin'>
+                    <span className='text-primary text-base hover:underline'>관리자페이지</span>
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <span className='text-primary text-base'>{getPathLabel()}</span>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
 
         {/* Page content */}
-        <div className='font-kakao-big flex-1 p-8'>
+        <div className='flex-1 p-8'>
           <Outlet />
         </div>
       </main>
