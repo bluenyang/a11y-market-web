@@ -50,7 +50,6 @@ export const adminApi = {
       return Promise.reject(err);
     }
   },
-  
 
   getDashboardStats: async () => {
     try {
@@ -102,4 +101,8 @@ export const adminApi = {
       return Promise.reject(err);
     }
   },
+  getPendingSellers: async () => await axiosInstance.get('/v1/admin/sellers/pending'),
+
+  updateSellerStatus: async (sellerId, status) =>
+    await axiosInstance.patch(`/v1/admin/sellers/${sellerId}/status`, null, { params: { status } }),
 };

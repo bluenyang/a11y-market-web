@@ -1,14 +1,30 @@
+import { adminApi } from '@/api/admin-api';
+import { LoadingEmpty } from '@/components/main/loading-empty';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Input } from '@/components/ui/input';
+import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 import { createFileRoute } from '@tanstack/react-router';
-import { Fragment, useState } from 'react';
+import { CircleCheck, CircleX, Search, UserRoundSearch } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_need-auth/_admin/admin/sellers')({
   component: RouteComponent,
@@ -16,184 +32,222 @@ export const Route = createFileRoute('/_need-auth/_admin/admin/sellers')({
 
 function RouteComponent() {
   // 임시 더미 데이터
-  const [sellers, setSellers] = useState([
-    {
-      sellerId: 1,
-      name: '홍길동',
-      company: '길동스토어',
-      businessNumber: '123-45-67890',
-      sellerIntro: '길동스토어입니다.',
-    },
-    {
-      sellerId: 2,
-      name: '이몽룡',
-      company: '몽룡스토어',
-      businessNumber: '987-65-43210',
-      sellerIntro: '몽룡스토어입니다.',
-    },
-    {
-      sellerId: 3,
-      name: '성춘향',
-      company: '춘향스토어',
-      businessNumber: '111-22-33333',
-      sellerIntro: '춘향스토어입니다.',
-    },
-  ]);
+  const [sellers, setSellers] = useState([]);
+  const [processedSellers, setProcessedSellers] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 승인/거절 상태 관리
-  const [sellerStatus, setSellerStatus] = useState({});
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const { status, data } = await adminApi.getPendingSellers();
 
-  // 드롭다운 확장 관리
-  const [expandedRows, setExpandedRows] = useState([]);
+        if (status !== 200) {
+          throw new Error('판매자 목록을 불러오지 못했습니다.');
+        }
+
+        setSellers(data);
+      } catch (err) {
+        console.error('판매자 목록 조회 실패:', err);
+        toast.error('판매자 목록 조회 중 오류가 발생했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
   // 승인 핸들러
-  const handleApprove = (id) => {
-    setSellerStatus((prev) => ({ ...prev, [id]: 'approved' }));
+  const handleApprove = async (id) => {
+    try {
+      const resp = await adminApi.updateSellerStatus(id, 'APPROVED');
+
+      if (resp.status === 204) {
+        setProcessedSellers((prev) => ({ ...prev, [id]: 'APPROVED' }));
+      } else {
+        throw new Error('Failed to approve seller');
+      }
+    } catch (err) {
+      console.error('Error approving seller:', err);
+      toast.error('판매자 승인 중 오류가 발생했습니다.');
+    }
   };
 
   // 거절 핸들러
-  const handleReject = (id) => {
-    setSellerStatus((prev) => ({ ...prev, [id]: 'rejected' }));
+  const handleReject = async (id) => {
+    try {
+      const resp = await adminApi.updateSellerStatus(id, 'REJECTED');
+
+      if (resp.status === 204) {
+        setProcessedSellers((prev) => ({ ...prev, [id]: 'REJECTED' }));
+      } else {
+        throw new Error('Failed to reject seller');
+      }
+    } catch (err) {
+      console.error('Error rejecting seller:', err);
+      toast.error('판매자 거절 중 오류가 발생했습니다.');
+    }
   };
 
-  // 취소 핸들러
-  const handleCancel = (id) => {
-    setSellerStatus((prev) => {
-      const newStatus = { ...prev };
-      delete newStatus[id];
-      return newStatus;
-    });
-  };
-
-  // 판매자 정보 상세보기
-  const toggleRow = (id) => {
-    setExpandedRows((prev) => (prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]));
-  };
+  if (isLoading) {
+    return <LoadingEmpty />;
+  }
 
   return (
-    <>
-      <div className='font-kakao-big mb-10 text-center text-3xl font-semibold'>승인대기 판매자</div>
-      <h3 className='font-kakao-big my-6 text-center'>
-        신규 가입 또는 재심사가 필요 판매자의 정보를 검토하고 가입 승인 여부를 결정할 수 있습니다.
-      </h3>
+    <main className='font-kakao-big mx-auto max-w-6xl px-4 py-8'>
+      <section className='mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+        <div>
+          <h1 className='text-2xl font-bold'>판매자 등록 신청 관리</h1>
+          <p className='text-muted-foreground mt-1 text-sm'>
+            판매자 계정 신청을 검토하고 승인/거절할 수 있습니다.
+          </p>
+        </div>
+      </section>
 
-      <div className='max-w-8xl font-kakao-big mx-auto w-full px-4 pt-4'>
-        <Table aria-label='승인대기 판매자 목록'>
-          <TableHeader aria-label='승인대기 판매자 목록 첫번째 행'>
-            <TableRow
-              className='hover:bg-transparent'
-              aria-label='승인대기 판매자 목록 머리글 행'
-            >
-              <TableHead className='text-center font-semibold'>판매자 이름</TableHead>
-              <TableHead className='text-center font-semibold'>판매자 ID</TableHead>
-              <TableHead className='font-semibold'>상호명 / 사업자등록번호</TableHead>
-              <TableHead className='text-center font-semibold'>승인/거절</TableHead>
-            </TableRow>
-          </TableHeader>
+      <section className='mb-4 flex max-w-6xl items-center justify-center'>
+        <div className='relative mb-6 w-full'>
+          <Search
+            className='absolute top-1/2 left-3 size-4 -translate-y-1/2 transform text-gray-400'
+            aria-hidden='true'
+          />
+          <Input
+            type='search'
+            placeholder='판매자명, 이메일로 검색'
+            className='pl-10'
+          />
+        </div>
+      </section>
 
-          <TableBody>
-            {sellers.map((seller) => (
-              <Fragment key={seller.sellerId}>
-                <TableRow
-                  id={`seller-row-${seller.sellerId}`}
-                  className='cursor-pointer hover:bg-gray-100'
-                  onClick={() => toggleRow(seller.sellerId)}
-                  aria-expanded={expandedRows.includes(seller.sellerId)}
-                  aria-controls={`seller-details-${seller.sellerId}`}
-                  aria-label='판매자 상세보기 토글'
-                  role='row'
+      <section className='border-muted-foreground/20 bg-card mb-8 rounded-2xl border p-4'>
+        {sellers.length === 0 && (
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant='icon'>
+                <UserRoundSearch />
+              </EmptyMedia>
+              <EmptyTitle>현재 승인 대기중인 판매자가 없습니다</EmptyTitle>
+              <EmptyDescription>
+                아직 승인 대기중인 판매자 신청이 없습니다. 새로운 신청이 들어오면 여기에서 확인할 수
+                있습니다.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        )}
+        {sellers.length > 0 && (
+          <>
+            {sellers.map((seller) => {
+              const status = processedSellers[seller.sellerId];
+
+              return (
+                <Item
+                  key={seller.sellerId}
+                  variant='outline'
                 >
-                  <TableCell className='text-center'>{seller.name}</TableCell>
-                  <TableCell className='text-center'>{seller.sellerId}</TableCell>
-                  <TableCell>{`${seller.company} / ${seller.businessNumber}`}</TableCell>
-                  <TableCell className='space-x-2 text-center'>
-                    {!sellerStatus[seller.sellerId] ? (
+                  <ItemContent>
+                    <ItemTitle className='text-lg font-bold'>{seller.sellerName}</ItemTitle>
+                    <ItemDescription className='text-primary flex flex-col space-y-1'>
+                      <span>
+                        <strong>사업자등록번호:</strong> {seller.businessNumber}
+                      </span>
+                      <span>
+                        <strong>판매자 소개:</strong> {seller.sellerIntro}
+                      </span>
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    {status && (
+                      <span className='px-4 py-2 font-medium'>
+                        {status === 'APPROVED' ? (
+                          <span className='text-green-600'>
+                            <CircleCheck
+                              className='mr-1 inline-block size-4'
+                              aria-hidden='true'
+                            />
+                            승인됨
+                          </span>
+                        ) : (
+                          <span className='text-red-600'>
+                            <CircleX
+                              className='mr-1 inline-block size-4'
+                              aria-hidden='true'
+                            />
+                            거절됨
+                          </span>
+                        )}
+                      </span>
+                    )}
+                    {!status && (
                       <>
-                        <Button
-                          variant='default'
-                          className='border border-gray-500 bg-white text-black hover:bg-gray-100'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleApprove(seller.sellerId);
-                          }}
-                          aria-label='판매자 신청 승인 버튼'
-                        >
-                          승인
-                        </Button>
-                        <Button
-                          variant='default'
-                          className='bg-black text-white hover:bg-gray-500'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReject(seller.sellerId);
-                          }}
-                          aria-label='판매자 신청 거절 버튼'
-                        >
-                          거절
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <span className='px-4 py-2 font-medium'>
-                          {sellerStatus[seller.sellerId] === 'approved' ? '승인됨' : '거절됨'}
-                        </span>
-                        <Button
-                          variant='default'
-                          className='bg-black text-white hover:bg-gray-500'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCancel(seller.sellerId);
-                          }}
-                          aria-label='판매자 승인/거절 취소 버튼'
-                        >
-                          취소
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant='default'
+                              className='bg-primary hover:bg-primary/80'
+                              aria-label='판매자 신청 승인 버튼'
+                            >
+                              승인
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>판매자 신청을 승인하시겠습니까?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {`승인 시 ${seller.sellerName}님은 판매자 계정으로 전환됩니다.`}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel aria-label='판매자 신청 승인 취소 버튼'>
+                                취소
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                aria-label='판매자 신청 승인 확인 버튼'
+                                className='bg-blue-500 text-white hover:bg-blue-600'
+                                onClick={() => handleApprove(seller.sellerId)}
+                              >
+                                계속
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant='outline'
+                              className='text-destructive border-destructive hover:bg-destructive/50 hover:text-white'
+                              aria-label='판매자 신청 거절 버튼'
+                            >
+                              거절
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>판매자 신청을 거절하시겠습니까?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {`거절 시 ${seller.sellerName}님의 판매자 계정 전환이 취소됩니다.`}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel aria-label='판매자 신청 거절 취소 버튼'>
+                                취소
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                aria-label='판매자 신청 거절 확인 버튼'
+                                className='bg-destructive hover:bg-destructive/90 text-white'
+                                onClick={() => handleReject(seller.sellerId)}
+                              >
+                                계속
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </>
                     )}
-                  </TableCell>
-                </TableRow>
-
-                {expandedRows.includes(seller.sellerId) && (
-                  <TableRow role='row'>
-                    <TableCell
-                      colSpan={4}
-                      className='bg-gray-100'
-                    >
-                      <dl
-                        id={`seller-details-${seller.sellerId}`}
-                        role='region'
-                        aria-labelledby={`seller-row-${seller.sellerId}`}
-                        className='space-y-1 p-4'
-                      >
-                        <div className='flex gap-2'>
-                          <dt className='font-semibold'>판매자명: </dt>
-                          <dd>{seller.name}</dd>
-                        </div>
-                        <div className='flex gap-2'>
-                          <dt className='font-semibold'>판매자ID: </dt>
-                          <dd>{seller.sellerId}</dd>
-                        </div>
-                        <div className='flex gap-2'>
-                          <dt className='font-semibold'>상호명: </dt>
-                          <dd>{seller.company}</dd>
-                        </div>
-                        <div className='flex gap-2'>
-                          <dt className='font-semibold'>사업자번호: </dt>
-                          <dd>{seller.businessNumber}</dd>
-                        </div>
-                        <div className='flex gap-2'>
-                          <dt className='font-semibold'>판매자 소개: </dt>
-                          <dd>{seller.sellerIntro}</dd>
-                        </div>
-                      </dl>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </Fragment>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </>
+                  </ItemActions>
+                </Item>
+              );
+            })}
+          </>
+        )}
+      </section>
+    </main>
   );
 }

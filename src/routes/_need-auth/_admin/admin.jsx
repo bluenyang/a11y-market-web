@@ -8,6 +8,7 @@ import {
 import { ROLES } from '@/constants/roles';
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 export const Route = createFileRoute('/_need-auth/_admin/admin')({
@@ -21,6 +22,14 @@ function RouteComponent() {
   const navigate = useNavigate();
 
   const { user } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (user?.userRole !== ROLES.ADMIN) {
+      navigate({
+        to: '/unauthorized',
+      });
+    }
+  });
 
   // variables and constants
   const currentPath = router.location.pathname;
@@ -39,13 +48,6 @@ function RouteComponent() {
     if (!item) return '';
     return item.label;
   };
-
-  // render
-  if (user?.userRole !== ROLES.ADMIN) {
-    navigate({
-      to: '/unauthorized',
-    });
-  }
 
   return (
     <div className='flex min-h-screen w-full flex-col md:flex-row'>

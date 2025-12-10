@@ -90,7 +90,7 @@ function AdminProductPendingPage() {
   };
 
   return (
-    <main className='font-kakao-big-sans mx-auto max-w-6xl px-4 py-8'>
+    <main className='font-kakao-big mx-auto max-w-6xl px-4 py-8'>
       <section className='mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <div>
           <h1 className='text-2xl font-bold'>상품 등록 신청 관리</h1>
