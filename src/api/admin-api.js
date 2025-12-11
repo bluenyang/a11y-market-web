@@ -90,6 +90,57 @@ export const adminApi = {
       return Promise.reject(err);
     }
   },
+
+  // 전체 주문 조회 (검색 포함)
+  getAdminOrders: async (params) => {
+    try {
+      const resp = await axiosInstance.get('/v1/admin/orders', { params });
+
+      if (resp.status !== 200) {
+        throw new Error('Failed to fetch admin orders');
+      }
+
+      return resp.data;
+    } catch (err) {
+      console.error('Error fetching admin orders:', err);
+      return Promise.reject(err);
+    }
+  },
+
+  // 주문 상세 조회
+  getAdminOrderDetail: async (orderId) => {
+    try {
+      const resp = await axiosInstance.get(`/v1/admin/orders/${orderId}`);
+
+      if (resp.status !== 200) {
+        throw new Error('Failed to fetch admin order detail');
+      }
+
+      return resp.data;
+    } catch (err) {
+      console.error(`Error fetching admin order detail for id ${orderId}:`, err);
+      return Promise.reject(err);
+    }
+  },
+
+  // 주문 상태 변경
+  updateOrderItemStatus: async (orderItemId, status) => {
+    try {
+      const resp = await axiosInstance.patch(`/v1/admin/orders/items/${orderItemId}`, null, {
+        params: { status },
+      });
+
+      if (resp.status !== 204 && resp.status !== 200) {
+        throw new Error('Failed to update order item status');
+      }
+
+      return resp;
+    } catch (err) {
+      console.error('Failed to update user role:', err);
+      return Promise.reject(err);
+    }
+  },
+
   getSellerList: async () => await axiosInstance.get('/v1/admin/sellers'),
 
   getSellerDetail: async (sellerId) => await axiosInstance.get(`/v1/admin/sellers/${sellerId}`),
