@@ -112,8 +112,8 @@ jobs:
           ${{ env.COMPOSE_CONTENT }}
           EOF
 
-          # Write application.yaml
-          echo "[LOG] build application.yaml ..."
+          # Write .env
+          echo "[LOG] build .env ..."
           cat <<'EOF' > ${{ secrets.DOCKER_DIR }}/deployments/fe-staging/.env
           ${{ env.ENVIRONMENT_FILE }}
           EOF

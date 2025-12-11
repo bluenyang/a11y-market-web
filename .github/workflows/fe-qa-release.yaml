@@ -6,7 +6,7 @@ on:
       - 'release/**'
 
 concurrency:
-  group: '${{ github.workflow }}-${{ github.event.pull_request.number || github.event.inputs.pr_number }}'
+  group: '${{ github.workflow }}-qa'
   cancel-in-progress: true
 
 env:
@@ -34,7 +34,7 @@ jobs:
           cache: 'npm'
 
       - name: Create .env file
-        run: echo "${{ secrets.FE_ENV_PR }}" > .env
+        run: echo "${{ secrets.FE_ENV_QA }}" > .env
 
       - name: Set dynamic variables
         id: vars
@@ -76,7 +76,7 @@ jobs:
           context: .
           file: .docker/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}:pr-${{ steps.vars.outputs.pr_number }}
+          tags: ${{ env.IMAGE_NAME }}:fe-qa-${{ steps.vars.outputs.clean_version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -90,7 +90,7 @@ jobs:
       CLEAN_VERSION: ${{ needs.build-and-push.outputs.clean_version }}
       TEAM_USER: ${{ secrets.TEAM_USER }}
       TEAM_PASS: ${{ secrets.TEAM_PASS }}
-      ENVIRONMENT_FILE: ${{ secrets.FE_ENV_PR }}
+      ENVIRONMENT_FILE: ${{ secrets.FE_ENV_QA }}
 
     steps:
       - name: Checkout code
@@ -100,7 +100,7 @@ jobs:
         run: |
           export SERVICE_NAME=fe-qa-${{ env.CLEAN_VERSION }}
 
-          echo "IMAGE_TAG=${{ env.IMAGE_NAME }}:qa-${{ env.CLEAN_VERSION }}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${{ env.IMAGE_NAME }}:fe-qa-${{ env.CLEAN_VERSION }}" >> $GITHUB_ENV
           echo "SERVICE_NAME=fe-qa-${{ env.CLEAN_VERSION }}" >> $GITHUB_ENV
           echo "HOST_NAME=fe-qa-${{ env.CLEAN_VERSION }}.${{ secrets.QA_DOMAIN }}" >> $GITHUB_ENV
           echo "DEPLOY_PATH=${{ secrets.DOCKER_DIR }}/deployments/fe-qa-${{ env.CLEAN_VERSION }}" >> $GITHUB_ENV
@@ -128,8 +128,8 @@ jobs:
           ${{ env.COMPOSE_CONTENT }}
           EOF
 
-          # Write application.yaml
-          echo "[LOG] build application.yaml ..."
+          # Write .env
+          echo "[LOG] build .env ..."
           cat <<'EOF' > ${{ env.DEPLOY_PATH }}/.env
           ${{ env.ENVIRONMENT_FILE }}
           EOF
