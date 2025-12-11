@@ -45,7 +45,7 @@ export default function OrderCard({ order }) {
               <ItemContent>
                 <ItemTitle className='w-full justify-start gap-4 text-lg font-bold'>
                   <ClipboardList />
-                  {`ID: ${getLastOfUUID(item.orderItemId)}`}
+                  {`상품 이름: ${item.productName}`}
                   <Badge className={badge.className}>{badge.label}</Badge>
                 </ItemTitle>
                 <ItemDescription>

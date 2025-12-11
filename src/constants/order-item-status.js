@@ -17,7 +17,7 @@ export const statusLabel = (status) => {
   switch (status) {
     case ORDER_ITEM_STATUS.ORDERED:
       return {
-        className: 'bg-green-500',
+        className: 'bg-violet-500',
         label: '결제 대기 중',
       };
     case ORDER_ITEM_STATUS.PAID:
@@ -67,7 +67,7 @@ export const statusLabel = (status) => {
       };
     case ORDER_ITEM_STATUS.RETURNED:
       return {
-        className: 'bg-green-500',
+        className: 'bg-orange-500',
         label: '반품 완료',
       };
     case ORDER_ITEM_STATUS.RETURN_REJECTED:
