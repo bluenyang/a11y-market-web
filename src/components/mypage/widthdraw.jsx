@@ -1,19 +1,46 @@
+import { userApi } from '@/api/user-api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldGroup } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { logout } from '@/store/auth-slice';
+import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { toast } from 'sonner';
 import { Separator } from '../ui/separator';
+import { Spinner } from '../ui/spinner';
 
 export const Widthdraw = () => {
   const [isChecked, setIsChecked] = useState(false);
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: 실제 탈퇴 API 연동
+    setIsLoading(true);
+
+    try {
+      const { status } = await userApi.withdrawAccount(password);
+
+      if (status !== 204) {
+        new Error('회원 탈퇴에 실패했습니다. 다시 시도해주세요.');
+      }
+
+      navigate({ to: '/' });
+      dispatch(logout());
+      toast.success('회원 탈퇴가 완료되었습니다.');
+    } catch (err) {
+      console.error('회원 탈퇴 오류:', err);
+      toast.error('회원 탈퇴에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -83,7 +110,7 @@ export const Widthdraw = () => {
                 htmlFor='password'
                 className='font-medium'
               >
-                비밀번호 확인
+                비밀번호 확인 (카카오 로그인 사용자는 제외)
               </Label>
               <Input
                 id='password'
@@ -91,8 +118,8 @@ export const Widthdraw = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder='비밀번호를 입력해주세요'
-                required
                 className='mt-1 h-10'
+                autoComplete='current-password'
               />
             </Field>
           </FieldGroup>
@@ -111,9 +138,16 @@ export const Widthdraw = () => {
             variant='destructive'
             type='submit'
             className='h-10 min-w-[120px]'
-            disabled={!isChecked || password.trim() === ''}
+            disabled={!isChecked || isLoading}
           >
-            탈퇴신청
+            {isLoading ? (
+              <span className='flex items-center gap-2'>
+                처리 중...
+                <Spinner />
+              </span>
+            ) : (
+              '회원 탈퇴'
+            )}
           </Button>
         </div>
       </form>
