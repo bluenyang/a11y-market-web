@@ -50,56 +50,20 @@ export const orderApi = {
   },
 
   //결제 전 주문 정보 조회
-  getCheckoutInfo: async (orderItemIds, orderAllItems = false) => {
-    try {
-      const resp = await axiosInstance.post('/v1/orders/pre-check', {
-        checkoutItemIds: orderItemIds,
-        orderAllItems,
-      });
+  /**
+   * @deprecated Use getCheckoutInfoV2 instead
+   * @returns 405 METHOD NOT ALLOWED
+   */
+  getCheckoutInfo: async () => await axiosInstance.post('/v1/orders/pre-check'),
 
-      if (resp.status !== 200) {
-        throw new Error('Failed to fetch checkout info');
-      }
-
-      return resp;
-    } catch (err) {
-      console.error('Failed to fetch checkout info:', err);
-      return Promise.reject(err);
-    }
-  },
-
-  getCheckoutInfoV2: async (cartItemIds, directOrderItem) => {
-    try {
-      const resp = await axiosInstance.post('/v2/orders/pre-check', {
-        cartItemIds: cartItemIds,
-        directOrderItem: directOrderItem,
-      });
-
-      if (resp.status !== 200) {
-        throw new Error('Failed to fetch checkout info');
-      }
-
-      return resp;
-    } catch (err) {
-      console.error('Failed to fetch checkout info:', err);
-      return Promise.reject(err);
-    }
-  },
+  getCheckoutInfoV2: async (cartItemIds, directOrderItem) =>
+    await axiosInstance.post('/v2/orders/pre-check', {
+      cartItemIds: cartItemIds,
+      directOrderItem: directOrderItem,
+    }),
 
   // 주문 생성
-  createOrder: async (addressId, orderItemIds) => {
-    try {
-      const resp = await axiosInstance.post('/v1/orders', {
-        addressId,
-        orderItemIds,
-      });
+  createOrder: async (data) => await axiosInstance.post('/v1/orders', data),
 
-      if (resp.status !== 201) {
-        throw new Error('Failed to create order');
-      }
-    } catch (err) {
-      console.error('Failed to create order:', err);
-      return Promise.reject(err);
-    }
-  },
+  verifyPayment: async (data) => await axiosInstance.post(`/v1/payments/verify`, data),
 };
