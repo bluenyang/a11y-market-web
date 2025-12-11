@@ -162,4 +162,6 @@ export const sellerApi = {
       return Promise.reject(err);
     }
   },
+
+  applySellerAccount: async (data) => await axiosInstance.post('/v1/seller/apply', data),
 };

@@ -2,6 +2,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
+import { sellerApi } from '@/api/seller-api';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -23,13 +24,39 @@ function SellerApplyPage() {
   const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
 
+  const [submiting, setSubmiting] = useState(false);
   const [shopName, setShopName] = useState('');
   const [businessNo, setBusinessNo] = useState('');
   const [description, setDescription] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: 나중에 API 연동
+    setSubmiting(true);
+    try {
+      const resp = await sellerApi.applySellerAccount({
+        sellerName: shopName,
+        businessNumber: businessNo,
+        sellerIntro: description,
+      });
+
+      if (resp.status !== 201) {
+        throw new Error('판매자 가입 신청에 실패했습니다.');
+      }
+
+      toast.success('판매자 가입 신청이 완료되었습니다. 심사 후 결과를 알려드리겠습니다.');
+      navigate({
+        to: '/',
+      });
+    } catch (err) {
+      console.error('Error applying for seller account:', err);
+      if (err.error === 'DUPLICATED_DATA') {
+        toast.error('이미 신청한 판매자 계정이 존재합니다.');
+      } else {
+        toast.error('판매자 가입 신청 중 오류가 발생했습니다. 다시 시도해 주세요.');
+      }
+    } finally {
+      setSubmiting(false);
+    }
   };
 
   if (!user || user?.userRole !== ROLES.USER) {
@@ -137,12 +164,17 @@ function SellerApplyPage() {
                 type='button'
                 variant='outline'
                 className='font-kakao-little h-9 border-slate-300 bg-slate-50 text-xs text-slate-700 hover:bg-slate-100'
+                onClick={() => navigate({ to: '/mypage' })}
+                disabled={submiting}
+                aria-label='신청 취소'
               >
                 취소
               </Button>
               <Button
                 type='submit'
                 className='font-kakao-little h-9 bg-slate-900 text-xs font-medium text-slate-50 hover:bg-slate-800'
+                disabled={submiting}
+                aria-label='가입 신청하기'
               >
                 가입 신청하기
               </Button>
