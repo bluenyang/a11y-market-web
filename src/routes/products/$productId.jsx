@@ -1,39 +1,28 @@
 // src/routes/products/$productId.jsx
+import { cartApi } from '@/api/cart-api';
 import { productApi } from '@/api/product-api';
 import { ImageWithFallback } from '@/components/image-with-fallback';
 import { LoadingEmpty } from '@/components/main/loading-empty';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
+import { Input } from '@/components/ui/input';
 import { Item } from '@/components/ui/item';
+import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { RotateCcw, Shield, ShoppingCart, Store, Truck } from 'lucide-react';
+import { MinusIcon, PlusIcon, RotateCcw, Shield, ShoppingCart, Store, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
-
-// 임시 상품 데이터 (백엔드 연동 전까지 UI 확인용)
-const productData = {
-  id: 1,
-  name: '상품명',
-  price: 0,
-  sellerName: '판매자명',
-  sellerGrade: '우수',
-  a11yGuarantee: true,
-  shippingInfo: ['배송정보', '무료배송'],
-  summary: '상품정보 요약',
-  options: [
-    { id: 'opt1', label: '옵션1', values: ['옵션 1-1', '옵션 1-2'] },
-    { id: 'opt2', label: '옵션2', values: ['옵션 2-1', '옵션 2-2'] },
-  ],
-};
+import { toast } from 'sonner';
 
 function ProductDetailPage() {
   const { productId } = Route.useParams(); // 실제 연동 시 사용 예정
 
   // 기본 탭은 상세정보로
   const [productData, setProductData] = useState(null);
-  const [selectedOptions, setSelectedOptions] = useState({});
   const [quantity, setQuantity] = useState(1); // 수량 상태
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
 
@@ -56,22 +45,35 @@ function ProductDetailPage() {
     fetchProductDetails();
   }, [productId]);
 
-  const handleBuyNow = () => {
-    // TODO: 바로구매 로직
-    console.log('Buy Now', {
-      productId,
-      selectedOptions,
-      quantity,
+  const handleBuyNow = async () => {
+    // 결제 페이지로 이동
+    navigate({
+      to: '/order/checkout',
+      search: (old) => ({
+        ...old,
+        type: 'DIRECT',
+        productId: productId,
+        quantity: quantity.toString(),
+      }),
     });
   };
 
-  const handleAddToCart = () => {
-    // TODO: 장바구니 담기 로직
-    console.log('Add to Cart', {
-      productId,
-      selectedOptions,
-      quantity,
-    });
+  const handleAddToCart = async () => {
+    try {
+      setIsSubmitting(true);
+      const { status } = await cartApi.addCartItem(productId, quantity);
+
+      if (status !== 204) {
+        throw new Error('Failed to add item to cart');
+      }
+
+      toast.success('장바구니에 상품이 추가되었습니다.');
+    } catch (err) {
+      console.error('Failed to add item to cart:', err);
+      toast.error('장바구니에 상품을 추가하는 데 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading || !productData) {
@@ -132,10 +134,40 @@ function ProductDetailPage() {
                 <div className='mb-2 text-3xl'>
                   {productData.productPrice?.toLocaleString('ko-KR')}원
                 </div>
-                <p className='text-sm'>재고: {productData.stock}개</p>
               </div>
 
-              <p className='mb-6 leading-relaxed'>{productData.productDescription}</p>
+              <div className='mb-6 flex flex-row items-center justify-between'>
+                <ButtonGroup>
+                  <Button
+                    variant='outline'
+                    className='w-8'
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    aria-label='수량 감소'
+                  >
+                    <MinusIcon className='size-4' />
+                  </Button>
+                  <Input
+                    className='bg-card text-card-foreground w-16 p-0 text-center'
+                    value={quantity}
+                    onChange={(e) => {
+                      const value = Math.max(1, Number(e.target.value));
+                      setQuantity(isNaN(value) ? 1 : value);
+                    }}
+                    aria-label='수량 선택'
+                  />
+                  <Button
+                    variant='outline'
+                    className='w-8'
+                    onClick={() => setQuantity(quantity + 1)}
+                    aria-label='수량 증가'
+                  >
+                    <PlusIcon className='size-4' />
+                  </Button>
+                </ButtonGroup>
+                <span className='text-lg'>
+                  {(quantity * productData.productPrice)?.toLocaleString('ko-KR')}원
+                </span>
+              </div>
 
               {/* 구매 버튼 */}
               <div className='flex gap-3'>
@@ -155,9 +187,12 @@ function ProductDetailPage() {
                 <Button
                   size='lg'
                   onClick={handleBuyNow}
-                  className='flex-1'
+                  className='flex flex-1'
+                  disabled={isSubmitting}
+                  aria-label='바로 구매'
                 >
                   바로 구매
+                  {isSubmitting ? <Spinner className='ml-2 size-5' /> : null}
                 </Button>
               </div>
 

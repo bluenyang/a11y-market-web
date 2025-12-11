@@ -1,3 +1,4 @@
+import { addressApi } from '@/api/address-api';
 import { orderApi } from '@/api/order-api';
 import { AddressSelector } from '@/components/address/address-selector';
 import { ErrorEmpty } from '@/components/main/error-empty';
@@ -23,43 +24,59 @@ import {
 } from '@/components/ui/table';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 
 export const Route = createFileRoute('/_need-auth/order/checkout')({
   component: orderCheckoutPage,
+  validateSearch: (search) => ({
+    type: search.type || 'CART',
+    cartItemIds: search.cartItemIds,
+    productId: search.productId || null,
+    quantity: search.quantity ? Number(search.quantity) : 1,
+  }),
 });
 
 function orderCheckoutPage() {
+  const { type, cartItemIds, productId, quantity } = Route.useSearch();
+
   const [checkout, setCheckout] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedAddress, setSelectedAddress] = useState(null);
-
-  const { orderItems } = useSelector((state) => state.order);
+  const [orderItems, setOrderItems] = useState([]);
 
   const navigate = useNavigate();
 
   // 결제 전 정보 조회
   useEffect(() => {
-    const fetchCheckout = async () => {
+    (async () => {
       try {
         setLoading(true);
-        const resp = await orderApi.getCheckoutInfo(orderItems.map((item) => item.cartItemId));
-        setCheckout(resp.data);
-
-        const defaultAddress = resp.data.addresses.find(
-          (addr) => addr.addressId === resp.data.defaultAddressId,
+        const resp = await orderApi.getCheckoutInfoV2(
+          type === 'CART' ? (cartItemIds ? cartItemIds.split(',') : []) : null,
+          type === 'DIRECT'
+            ? {
+                productId: productId,
+                quantity: quantity,
+              }
+            : null,
         );
 
+        setCheckout(resp.data);
+        setOrderItems(resp.data.items);
+
+        const { data, status } = await addressApi.getAddressList();
+        if (status !== 200) {
+          throw new Error('Failed to fetch address list');
+        }
+
+        const defaultAddress = data.find((addr) => addr.isDefault);
         setSelectedAddress(defaultAddress);
       } catch (err) {
         setError(err);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchCheckout();
+    })();
   }, []);
 
   const handleOrder = async () => {
@@ -138,10 +155,8 @@ function orderCheckoutPage() {
         {/* 배송지 선택 */}
         <section>
           <AddressSelector
-            addresses={checkout.addresses}
-            defaultAddressId={checkout.defaultAddressId}
-            onSelectAddress={(addressId) => {
-              const address = checkout.addresses.find((addr) => addr.addressId === addressId);
+            defaultAddressId={selectedAddress?.addressId}
+            onSelectAddress={(address) => {
               setSelectedAddress(address);
             }}
           />
@@ -170,9 +185,9 @@ function orderCheckoutPage() {
                       <TableCell className='max-w-40 truncate px-8'>
                         {`${item.productName}`}
                       </TableCell>
-                      <TableCell className='text-center'>{item.quantity}</TableCell>
+                      <TableCell className='text-center'>{item.productQuantity}</TableCell>
                       <TableCell className='text-center'>{`${item.productPrice?.toLocaleString('ko-KR')}원`}</TableCell>
-                      <TableCell className='text-center'>{`${(item.productPrice * item.quantity).toLocaleString('ko-KR')}원`}</TableCell>
+                      <TableCell className='text-center'>{`${item.productTotalPrice?.toLocaleString('ko-KR')}원`}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -223,10 +238,10 @@ function orderCheckoutPage() {
                 <CardDescription>결제하실 금액을 확인해 주세요.</CardDescription>
               </CardHeader>
               <CardContent className='flex flex-col gap-2'>
-                <span>{`총 상품 금액: ${checkout?.totalAmount}원`}</span>
-                <span>{`배송비: ${checkout?.shippingFee}원`}</span>
+                <span>{`총 상품 금액: ${checkout?.totalAmount.toLocaleString('ko-KR')}원`}</span>
+                <span>{`배송비: ${checkout?.shippingFee.toLocaleString('ko-KR')}원`}</span>
                 <span className='text-lg font-bold'>
-                  {`총 결제 금액: ${checkout?.finalAmount}원`}
+                  {`총 결제 금액: ${checkout?.finalAmount.toLocaleString('ko-KR')}원`}
                 </span>
               </CardContent>
             </Card>

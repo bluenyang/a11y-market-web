@@ -1,6 +1,5 @@
 // src/routes/cart.jsx
 import { cartApi } from '@/api/cart-api';
-import { orderApi } from '@/api/order-api';
 import { CartGroup } from '@/components/cart/cart-group';
 import { LoadingEmpty } from '@/components/main/loading-empty';
 import { Alert, AlertTitle } from '@/components/ui/alert';
@@ -22,7 +21,6 @@ import {
 } from '@/components/ui/empty';
 import { Item } from '@/components/ui/item';
 import { Spinner } from '@/components/ui/spinner';
-import { setOrderItems } from '@/store/order-slice';
 import { Icon } from '@iconify/react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AlertCircleIcon } from 'lucide-react';
@@ -104,30 +102,19 @@ function CartPage() {
       orderAllItems: type === 'all',
     };
 
-    // 주문이 가능한지 확인
-    try {
-      const resp = await orderApi.getCheckoutInfo(options.selectedItems, options.orderAllItems);
-      const checkData = resp.data;
-
-      if (checkData.status === 'OUT_OF_STOCK') {
-        setErr('재고가 부족한 상품이 있습니다.');
-        setSubmitType('none');
-        return;
-      } else if (checkData.totalAmount !== totalPrice) {
-        setErr('선택된 상품의 가격이 일치하지 않습니다. 새로고침 후 다시 시도해주세요.');
-        setSubmitType('none');
-        return;
-      }
-
-      dispatch(setOrderItems(selectedIds));
-      navigate({
-        to: '/order/checkout',
-      });
-    } catch (e) {
-      setErr(e.message);
-      setSubmitType('none');
-      return;
-    }
+    navigate({
+      to: '/order/checkout',
+      search: (old) => ({
+        ...old,
+        type: 'CART',
+        cartItemIds:
+          type === 'all'
+            ? cartGroups.items
+                .flatMap((group) => group.items.map((item) => item.cartItemId))
+                .join(',')
+            : selectedIds.join(','),
+      }),
+    });
   };
 
   const handleOnDeleteGroup = (sellerId) => {
@@ -267,7 +254,7 @@ function CartPage() {
               <Button
                 variant='default'
                 className='w-full px-16 py-6 text-lg font-bold md:w-auto'
-                disabled={selectedItems.size === 0 || submitType !== 'none'}
+                disabled={submitType !== 'none'}
                 onClick={() => {
                   handleOrder('all');
                   // navigate({

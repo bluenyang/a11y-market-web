@@ -68,6 +68,24 @@ export const orderApi = {
     }
   },
 
+  getCheckoutInfoV2: async (cartItemIds, directOrderItem) => {
+    try {
+      const resp = await axiosInstance.post('/v2/orders/pre-check', {
+        cartItemIds: cartItemIds,
+        directOrderItem: directOrderItem,
+      });
+
+      if (resp.status !== 200) {
+        throw new Error('Failed to fetch checkout info');
+      }
+
+      return resp;
+    } catch (err) {
+      console.error('Failed to fetch checkout info:', err);
+      return Promise.reject(err);
+    }
+  },
+
   // 주문 생성
   createOrder: async (addressId, orderItemIds) => {
     try {

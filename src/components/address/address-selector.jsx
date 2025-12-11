@@ -1,3 +1,4 @@
+import { addressApi } from '@/api/address-api';
 import { AddressModifier } from '@/components/address/address-modifier';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,17 +21,37 @@ import {
 } from '@/components/ui/dialog';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@/components/ui/table';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Spinner } from '../ui/spinner';
 
-export const AddressSelector = ({ addresses, defaultAddressId, onSelectAddress }) => {
-  const [selectedAddressId, setSelectedAddressId] = useState(defaultAddressId);
+export const AddressSelector = ({ defaultAddressId, onSelectAddress }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddress, setSelectedAddress] = useState(null);
 
-  const handleAddressSelect = (addressId) => {
-    setSelectedAddressId(addressId);
-    onSelectAddress(addressId);
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const { data, status } = await addressApi.getAddressList();
+        if (status !== 200) {
+          throw new Error('Failed to fetch address list');
+        }
+
+        setAddresses(data);
+        setSelectedAddress(data.find((addr) => addr.addressId === defaultAddressId) || data[0]);
+      } catch (err) {
+        console.error('Failed to fetch addresses:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleAddressSelect = (address) => {
+    setSelectedAddress(address);
+    onSelectAddress(address);
   };
-
-  const selectedAddress = addresses.find((addr) => addr.addressId === selectedAddressId);
 
   const formatPhoneNumber = (phoneNumber) => {
     if (!phoneNumber) return '';
@@ -41,6 +62,10 @@ export const AddressSelector = ({ addresses, defaultAddressId, onSelectAddress }
     }
     return phoneNumber;
   };
+
+  if (isLoading || !selectedAddress) {
+    return <Spinner />;
+  }
 
   return (
     <Card className='px-0 py-4'>
@@ -75,8 +100,9 @@ export const AddressSelector = ({ addresses, defaultAddressId, onSelectAddress }
                     <ItemContent>
                       <ItemTitle>{address.addressName}</ItemTitle>
                       <ItemDescription>
-                        <p>{`${address.receiverName} | ${formatPhoneNumber(address.receiverPhone)}`}</p>
-                        <p>{`${address.receiverAddr1} ${address.receiverAddr2}`}</p>
+                        <span>{`${address.receiverName} | ${formatPhoneNumber(address.receiverPhone)}`}</span>
+                        <br />
+                        <span>{`${address.receiverAddr1} ${address.receiverAddr2}`}</span>
                       </ItemDescription>
                     </ItemContent>
                     <ItemActions>
@@ -84,7 +110,7 @@ export const AddressSelector = ({ addresses, defaultAddressId, onSelectAddress }
                         variant='default'
                         size='sm'
                         onClick={() => {
-                          handleAddressSelect(address.addressId);
+                          handleAddressSelect(address);
                         }}
                         aria-label={`배송지 ${address.addressName} 선택 버튼`}
                         className='hover:bg-blue-700 hover:shadow-md'
