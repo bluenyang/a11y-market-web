@@ -15,10 +15,10 @@ function OrderCompletePage() {
 
   return (
     <section
-      className='flex min-h-screen items-center justify-center bg-gray-50 px-6'
+      className='flex min-h-screen items-center justify-center px-6'
       aria-label='주문 완료 페이지'
     >
-      <div className='w-full max-w-xl rounded-xl border bg-white p-8 text-center shadow-lg'>
+      <div className='w-full max-w-xl rounded-xl border p-8 text-center shadow-lg'>
         {/* 아이콘 */}
         <CheckCircle2
           className='mx-auto mb-6 h-16 w-16 text-green-600'
@@ -35,13 +35,13 @@ function OrderCompletePage() {
         </h1>
 
         {/* 주문번호 */}
-        <p className='mb-6 text-gray-600'>주문 번호를 아래에서 확인하실 수 있습니다.</p>
+        <p className='mb-6'>주문 번호를 아래에서 확인하실 수 있습니다.</p>
 
         <div
-          className='mb-8 rounded-md bg-gray-100 p-4 text-sm font-medium'
+          className='mb-8 rounded-md p-4 text-sm font-medium'
           aria-label='주문 번호 정보'
         >
-          주문번호: <span className='font-semibold text-gray-900'>{orderId || '알 수 없음'}</span>
+          주문번호: <span className='font-semibold'>{orderId || '알 수 없음'}</span>
         </div>
 
         {/* 버튼 영역 */}

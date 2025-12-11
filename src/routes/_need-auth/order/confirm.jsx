@@ -53,7 +53,7 @@ function PurchaseConfirmPage() {
       </header>
 
       {/* 주문 정보 요약 카드 */}
-      <Card className='border-slate-200 bg-white shadow-sm'>
+      <Card className='shadow-sm'>
         <CardHeader className='pb-3'>
           <CardTitle className='font-kakao-little text-sm text-slate-900'>주문 정보</CardTitle>
           <CardDescription className='font-kakao-little text-xs text-slate-500'>
@@ -67,7 +67,7 @@ function PurchaseConfirmPage() {
               <Input
                 readOnly
                 value={currentOrder.orderId}
-                className='h-9 bg-slate-50 text-xs text-slate-800'
+                className='h-9 text-xs text-slate-800'
               />
             </Field>
             <Field>
@@ -75,7 +75,7 @@ function PurchaseConfirmPage() {
               <Input
                 readOnly
                 value={currentOrder.date}
-                className='h-9 bg-slate-50 text-xs text-slate-800'
+                className='h-9 text-xs text-slate-800'
               />
             </Field>
             <Field className='md:col-span-2'>
@@ -83,7 +83,7 @@ function PurchaseConfirmPage() {
               <Input
                 readOnly
                 value={currentOrder.productName}
-                className='h-9 bg-slate-50 text-xs text-slate-800'
+                className='h-9 text-xs text-slate-800'
               />
             </Field>
             <Field>
@@ -91,7 +91,7 @@ function PurchaseConfirmPage() {
               <Input
                 readOnly
                 value={`₩${currentOrder.amount.toLocaleString(`ko-KR`)}`}
-                className='h-9 bg-slate-50 text-xs text-slate-800'
+                className='h-9 text-xs text-slate-800'
               />
             </Field>
             <Field>
@@ -99,7 +99,7 @@ function PurchaseConfirmPage() {
               <Input
                 readOnly
                 value={currentOrder.status}
-                className='h-9 bg-slate-50 text-xs text-slate-800'
+                className='h-9 text-xs text-slate-800'
               />
             </Field>
           </FieldGroup>
@@ -107,7 +107,7 @@ function PurchaseConfirmPage() {
       </Card>
 
       {/* 구매 확정 안내 카드 */}
-      <Card className='border-slate-200 bg-white shadow-sm'>
+      <Card className='border-slate-200 shadow-sm'>
         <CardHeader className='pb-3'>
           <CardTitle className='font-kakao-little text-sm text-slate-900'>
             구매 확정 전 꼭 확인해 주세요
@@ -151,14 +151,14 @@ function PurchaseConfirmPage() {
           <Button
             type='button'
             variant='outline'
-            className='font-kakao-little h-10 border-slate-300 bg-slate-50 text-xs text-slate-700 hover:bg-slate-100'
+            className='font-kakao-little h-10 border-slate-300 text-xs text-slate-700 hover:bg-slate-100'
           >
             돌아가기
           </Button>
           <Button
             type='submit'
             disabled={!agreeAll}
-            className='font-kakao-little h-10 bg-slate-900 text-xs font-medium text-slate-50 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500'
+            className='font-kakao-little h-10 text-xs font-medium text-slate-50 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500'
           >
             구매 확정하기
           </Button>

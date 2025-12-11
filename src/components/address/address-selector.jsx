@@ -134,25 +134,25 @@ export const AddressSelector = ({ defaultAddressId, onSelectAddress }) => {
         <Table>
           <TableBody>
             <TableRow>
-              <TableHead className='w-[10%] bg-neutral-100 pl-4 text-right'>배송지 이름</TableHead>
+              <TableHead className='w-[10%] pl-4 text-right'>배송지 이름</TableHead>
               <TableCell className='border-l px-8'>{selectedAddress.addressName}</TableCell>
             </TableRow>
             <TableRow>
-              <TableHead className='w-[10%] bg-neutral-100 pl-4 text-right'>수령인</TableHead>
+              <TableHead className='w-[10%] pl-4 text-right'>수령인</TableHead>
               <TableCell className='border-l px-8'>{selectedAddress.receiverName}</TableCell>
             </TableRow>
             <TableRow>
-              <TableHead className='w-[10%] bg-neutral-100 pl-4 text-right'>연락처</TableHead>
+              <TableHead className='w-[10%] pl-4 text-right'>연락처</TableHead>
               <TableCell className='border-l px-8'>
                 {formatPhoneNumber(selectedAddress.receiverPhone)}
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableHead className='w-[10%] bg-neutral-100 pl-4 text-right'>우편번호</TableHead>
+              <TableHead className='w-[10%] pl-4 text-right'>우편번호</TableHead>
               <TableCell className='border-l px-8'>{selectedAddress.receiverZipcode}</TableCell>
             </TableRow>
             <TableRow>
-              <TableHead className='w-[10%] bg-neutral-100 pl-4 text-right'>주소</TableHead>
+              <TableHead className='w-[10%] pl-4 text-right'>주소</TableHead>
               <TableCell className='border-l px-8'>{`${selectedAddress.receiverAddr1} ${selectedAddress.receiverAddr2}`}</TableCell>
             </TableRow>
           </TableBody>

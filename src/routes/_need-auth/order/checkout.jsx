@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import {
   Table,
@@ -242,7 +241,7 @@ function orderCheckoutPage() {
                       <TableCell className='max-w-40 truncate px-8'>
                         {`${item.productName}`}
                       </TableCell>
-                      <TableCell className='text-center'>{item.productQuantity}</TableCell>
+                      <TableCell className='text-center'>{item.quantity}</TableCell>
                       <TableCell className='text-center'>{`${item.productPrice?.toLocaleString('ko-KR')}원`}</TableCell>
                       <TableCell className='text-center'>{`${item.productTotalPrice?.toLocaleString('ko-KR')}원`}</TableCell>
                     </TableRow>
@@ -259,28 +258,23 @@ function orderCheckoutPage() {
             <CardHeader>
               <CardTitle className='font-bold'>결제 수단</CardTitle>
             </CardHeader>
-            <CardContent>
-              <RadioGroup
-                defaultValue='tosspay'
-                className='flex flex-col gap-2'
-              >
-                <Card className='py-0 transition-colors has-data-[state=checked]:border-l-4 has-data-[state=checked]:border-blue-500'>
-                  <CardContent className='flex items-center gap-4 py-4'>
-                    <div
-                      id='payment-method'
-                      className='flex-1'
-                    />
-                  </CardContent>
-                </Card>
-                <Card className='py-0 transition-colors has-data-[state=checked]:border-l-4 has-data-[state=checked]:border-blue-500'>
-                  <CardContent className='flex items-center gap-4 py-4'>
-                    <div
-                      id='agreement'
-                      className='flex-1'
-                    />
-                  </CardContent>
-                </Card>
-              </RadioGroup>
+            <CardContent className='flex flex-col gap-4'>
+              <Card className='py-0 transition-colors has-data-[state=checked]:border-l-4 has-data-[state=checked]:border-blue-500'>
+                <CardContent className='flex items-center gap-4 p-0'>
+                  <div
+                    id='payment-method'
+                    className='flex-1 overflow-hidden rounded-lg'
+                  />
+                </CardContent>
+              </Card>
+              <Card className='py-0 transition-colors has-data-[state=checked]:border-l-4 has-data-[state=checked]:border-blue-500'>
+                <CardContent className='flex items-center gap-4 p-0'>
+                  <div
+                    id='agreement'
+                    className='flex-1 overflow-hidden rounded-lg'
+                  />
+                </CardContent>
+              </Card>
             </CardContent>
           </Card>
         </section>

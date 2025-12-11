@@ -34,21 +34,28 @@ export default function OrderCard({ order }) {
             <Item
               key={item.orderItemId}
               className='border-border cursor-pointer space-y-2 rounded-lg border p-4 hover:shadow-md'
-              onClick={() => {
-                navigate({
-                  to: `/products/${item.productId}`,
-                });
-              }}
             >
               <ItemMedia>
                 <img
                   src={item.productImageUrl}
                   alt={item.productName}
                   className='aspect-3/2 h-16 rounded-md object-cover'
+                  onClick={() => {
+                    navigate({
+                      to: `/products/${item.productId}`,
+                    });
+                  }}
                 />
               </ItemMedia>
               <ItemContent>
-                <ItemTitle className='w-full justify-start gap-4 text-lg font-bold'>
+                <ItemTitle
+                  className='w-full justify-start gap-4 text-lg font-bold'
+                  onClick={() => {
+                    navigate({
+                      to: `/products/${item.productId}`,
+                    });
+                  }}
+                >
                   <ClipboardList />
                   {`상품 이름: ${item.productName}`}
                   <Badge className={badge.className}>{badge.label}</Badge>
@@ -64,7 +71,7 @@ export default function OrderCard({ order }) {
                     className='h-8 w-32 text-sm font-bold transition-all hover:-translate-y-0.5 hover:shadow-md'
                     onClick={() => {
                       navigate({
-                        to: `/orders/${order.orderId}`,
+                        to: `/mypage/orders/${item.orderItemId}`,
                       });
                     }}
                   >
