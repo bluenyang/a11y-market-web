@@ -30,4 +30,11 @@ export const userApi = {
       return Promise.reject(err);
     }
   },
+
+  withdrawAccount: async (password) =>
+    await axiosInstance.delete('/v1/users/me', {
+      data: {
+        userPassword: password,
+      },
+    }),
 };

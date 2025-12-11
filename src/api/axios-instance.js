@@ -1,6 +1,7 @@
 import { logout, tokenRefresh } from '@/store/auth-slice';
 import { store } from '@/store/store';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
@@ -67,7 +68,7 @@ axiosInstance.interceptors.response.use(
           return axiosInstance(originalRequest);
         } catch (err) {
           store.dispatch(logout());
-          alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+          toast.error('세션이 만료되었습니다. 다시 로그인해주세요.');
           window.location.href = '/login';
           return Promise.reject(err);
         }

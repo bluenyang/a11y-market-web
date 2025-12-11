@@ -1,20 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { a11yApi } from '@/api/a11y-api';
+import A11yEditModal from '@/components/accessibility/a11y-edit-modal';
+import A11yProfileList from '@/components/accessibility/a11y-profile-list';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { setAllA11y } from '@/store/a11y-slice';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { a11yApi } from '@/api/a11y-api';
 import { toast } from 'sonner';
-import { setAllA11y } from '@/store/a11y-slice';
 
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import A11yProfileList from '@/components/accessibility/a11y-profile-list';
-import A11yEditModal from '@/components/accessibility/a11y-edit-modal';
-
-export const Route = createFileRoute('/_need-auth/_mypage/mypage/a11y')({
-  component: A11ySettingsPage,
-});
-
-function A11ySettingsPage() {
+export const A11ySetting = () => {
   const dispatch = useDispatch();
   const [profiles, setProfiles] = useState([]);
   const [editingProfile, setEditingProfile] = useState(null);
@@ -125,5 +119,4 @@ function A11ySettingsPage() {
       />
     </div>
   );
-}
-export default A11ySettingsPage;
+};
