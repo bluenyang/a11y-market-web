@@ -77,7 +77,7 @@ export const ProductFilter = ({ onFilterChange }) => {
   const hasActiveFilters = searchQuery !== '' || selectedCategories.length > 0 || minRating > 0;
 
   return (
-    <div className='space-y-6 rounded-lg bg-white p-6 shadow-sm'>
+    <div className='space-y-6 rounded-lg p-6 shadow-sm'>
       {/* 헤더 */}
       <div className='flex items-center justify-between'>
         <h2 className='text-lg'>상세 검색</h2>

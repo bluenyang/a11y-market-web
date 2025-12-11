@@ -29,7 +29,7 @@ export const ProductCard = ({ product }) => {
 
   return (
     <article
-      className='group rounded-lg border bg-white shadow-sm transition-shadow hover:shadow-md'
+      className='group rounded-lg border shadow-sm transition-shadow hover:shadow-md'
       aria-label={`${product.productName} 상품 카드`}
     >
       <Link to={`/products/${product.productId}`}>

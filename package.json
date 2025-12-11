@@ -34,6 +34,7 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@reduxjs/toolkit": "^2.9.2",
     "@tanstack/react-router": "^1.133.32",
+    "@tosspayments/payment-widget-sdk": "^0.12.1",
     "@vitest/ui": "^4.0.8",
     "axios": "^1.12.2",
     "class-variance-authority": "^0.7.1",

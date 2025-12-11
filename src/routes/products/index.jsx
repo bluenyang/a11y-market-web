@@ -99,11 +99,11 @@ function RouteComponent() {
   });
 
   return (
-    <main className='flex-1 bg-gray-50'>
+    <main className='flex-1'>
       <div className='container mx-auto px-4 py-8'>
         <div className='mb-6'>
           <h1 className='mb-2 text-3xl'>전체 상품</h1>
-          <p className='text-gray-600'>총 {sortedProducts.length}개의 상품</p>
+          <p>총 {sortedProducts.length}개의 상품</p>
         </div>
 
         <div className='lg:grid lg:grid-cols-[280px_1fr] lg:gap-6'>
@@ -114,8 +114,8 @@ function RouteComponent() {
           {/* 우측: 정렬 및 상품 그리드 */}
           <div>
             {/* 정렬 드롭다운 */}
-            <div className='mb-6 flex items-center justify-between rounded-lg bg-white p-4 shadow-sm'>
-              <span className='text-sm text-gray-600'>{sortedProducts.length}개 상품</span>
+            <div className='mb-6 flex items-center justify-between rounded-lg p-4 shadow-sm'>
+              <span className='text-sm'>{sortedProducts.length}개 상품</span>
               <Select
                 value={sortBy}
                 onValueChange={setSortBy}
@@ -152,8 +152,8 @@ function RouteComponent() {
               </div>
             ) : (
               /* 상품이 없을 때 */
-              <div className='rounded-lg bg-white p-16 text-center shadow-sm'>
-                <p className='mb-4 text-gray-500'>검색 조건에 맞는 상품이 없습니다.</p>
+              <div className='rounded-lg p-16 text-center shadow-sm'>
+                <p className='mb-4'>검색 조건에 맞는 상품이 없습니다.</p>
                 <Button
                   variant='outline'
                   onClick={() =>

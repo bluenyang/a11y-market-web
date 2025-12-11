@@ -1,4 +1,5 @@
 import { userApi } from '@/api/user-api';
+import { LoadingEmpty } from '@/components/main/loading-empty';
 import { A11ySetting } from '@/components/mypage/a11y-setting';
 import { AccountInfo } from '@/components/mypage/account-info';
 import { AddressManager } from '@/components/mypage/address-manager';
@@ -27,6 +28,9 @@ import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_need-auth/mypage/')({
   component: RouteComponent,
+  validateSearch: (search) => ({
+    tab: search.tab,
+  }),
 });
 
 function RouteComponent() {
@@ -40,19 +44,39 @@ function RouteComponent() {
   ];
 
   const { user, logout } = useSelector((state) => state.auth);
+  const { tab } = Route.useSearch();
 
   const [userInfo, setUserInfo] = useState({});
-  const [activeTab, setActiveTab] = useState('info');
+  const [activeTab, setActiveTab] = useState('');
   const [sellerSubmitStatus, setSellerSubmitStatus] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    (async () => {
-      const resp = await userApi.getProfile();
+    setLoading(true);
+    if (tab && menuItems.some((item) => item.value === tab)) {
+      setActiveTab(tab);
+    } else {
+      setActiveTab('info');
+    }
+    setLoading(false);
+  }, [tab]);
 
-      setUserInfo(resp.data);
-      setSellerSubmitStatus(resp.data.sellerSubmitStatus);
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const resp = await userApi.getProfile();
+
+        setUserInfo(resp.data);
+        setSellerSubmitStatus(resp.data.sellerSubmitStatus);
+      } catch (err) {
+        console.error('유저 정보 불러오기 실패:', err);
+        toast.error('유저 정보 불러오기 실패. 다시 시도해주세요.');
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -125,6 +149,17 @@ function RouteComponent() {
         );
     }
   };
+
+  if (loading) {
+    return (
+      <main
+        className='font-kakao-big flex-1 bg-neutral-50 dark:bg-neutral-900'
+        aria-label='마이페이지 내용 영역'
+      >
+        <LoadingEmpty />
+      </main>
+    );
+  }
 
   return (
     <main

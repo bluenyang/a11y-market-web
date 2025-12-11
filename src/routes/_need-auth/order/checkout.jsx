@@ -1,5 +1,6 @@
 import { addressApi } from '@/api/address-api';
 import { orderApi } from '@/api/order-api';
+import { userApi } from '@/api/user-api';
 import { AddressSelector } from '@/components/address/address-selector';
 import { ErrorEmpty } from '@/components/main/error-empty';
 import { LoadingEmpty } from '@/components/main/loading-empty';
@@ -11,8 +12,6 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import {
   Table,
@@ -23,7 +22,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { loadPaymentWidget } from '@tosspayments/payment-widget-sdk';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
+
+const CLIENT_KEY = import.meta.env.VITE_TOSS_PAYMENTS_CLIENT_KEY;
 
 export const Route = createFileRoute('/_need-auth/order/checkout')({
   component: orderCheckoutPage,
@@ -38,6 +41,11 @@ export const Route = createFileRoute('/_need-auth/order/checkout')({
 function orderCheckoutPage() {
   const { type, cartItemIds, productId, quantity } = Route.useSearch();
 
+  const [user, setUser] = useState({
+    userId: '',
+    userEmail: '',
+    userName: '',
+  });
   const [checkout, setCheckout] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -45,9 +53,14 @@ function orderCheckoutPage() {
   const [orderItems, setOrderItems] = useState([]);
 
   const navigate = useNavigate();
+  const paymentWidgetRef = useRef(null);
+  const paymentMethodWidgetRef = useRef(null);
 
   // 결제 전 정보 조회
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    let isMounted = true;
     (async () => {
       try {
         setLoading(true);
@@ -61,6 +74,8 @@ function orderCheckoutPage() {
             : null,
         );
 
+        if (!isMounted) return;
+
         setCheckout(resp.data);
         setOrderItems(resp.data.items);
 
@@ -69,39 +84,82 @@ function orderCheckoutPage() {
           throw new Error('Failed to fetch address list');
         }
 
-        const defaultAddress = data.find((addr) => addr.isDefault);
+        const defaultAddress = data.find((addr) => addr.isDefault === true) || data[0] || null;
         setSelectedAddress(defaultAddress);
+
+        const { data: user } = await userApi.getProfile();
+        setUser({
+          userId: user?.userId || '',
+          userEmail: user?.userEmail || '',
+          userName: user?.userName || '',
+        });
+
+        const userId = user?.userId;
+        if (!userId) throw new Error('사용자 정보가 없습니다.');
+
+        const paymentWidget = await loadPaymentWidget(CLIENT_KEY, userId);
+        paymentWidgetRef.current = paymentWidget;
+
+        const paymentMethodWidget = paymentWidget.renderPaymentMethods(
+          '#payment-method',
+          { value: resp.data.finalAmount },
+          { variantKey: 'DEFAULT' },
+        );
+
+        paymentWidget.renderAgreement('#agreement', { variantKey: 'DEFAULT' });
+        paymentMethodWidgetRef.current = paymentMethodWidget;
       } catch (err) {
         setError(err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     })();
   }, []);
 
-  const handleOrder = async () => {
+  const handlePayment = async () => {
+    if (!selectedAddress) {
+      toast.error('배송지를 선택해주세요.');
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const data = await orderApi.createOrder(
-        selectedAddress.addressId,
-        orderItems.map((item) => item.cartItemId),
-      );
+      const currentCartItemIds = orderItems.map((item) => item.cartItemId);
 
-      if (data?.status === 'ERROR') {
-        setError(new Error(data.message || '주문 생성에 실패했습니다.'));
-        return;
+      const { data: orderData } = await orderApi.createOrder({
+        addressId: selectedAddress.addressId,
+        cartItemIds: type === 'CART' ? currentCartItemIds : null,
+        directOrderItem:
+          type === 'DIRECT'
+            ? { productId: orderItems[0].productId, quantity: orderItems[0].productQuantity }
+            : null,
+      });
+
+      if (!orderData || !orderData.orderId) {
+        throw new Error('주문 생성에 실패했습니다.');
       }
 
-      navigate({
-        to: '/order/complete',
-        search: {
-          orderId: data.orderId,
-        },
+      if (type === 'CART') {
+        sessionStorage.setItem('checkout_cart_items', JSON.stringify(currentCartItemIds));
+      }
+
+      const paymentWidget = paymentWidgetRef.current;
+
+      await paymentWidget.requestPayment({
+        orderId: orderData.orderId,
+        orderName:
+          orderItems.length > 1
+            ? `${orderItems[0].productName} 외 ${orderItems.length - 1}건`
+            : orderItems[0].productName,
+        successUrl: `${window.location.origin}/order/process`,
+        failUrl: `${window.location.origin}/order/process`,
+        customerEmail: user.userEmail,
+        customerName: user.userName,
       });
     } catch (err) {
-      setError(err);
-    } finally {
+      console.error('결제 요청에 실패하였습니다:', err);
+      toast.error(`결제 요청에 실패하였습니다: ${err.message || err}`);
       setLoading(false);
     }
   };
@@ -185,7 +243,7 @@ function orderCheckoutPage() {
                       <TableCell className='max-w-40 truncate px-8'>
                         {`${item.productName}`}
                       </TableCell>
-                      <TableCell className='text-center'>{item.productQuantity}</TableCell>
+                      <TableCell className='text-center'>{item.quantity}</TableCell>
                       <TableCell className='text-center'>{`${item.productPrice?.toLocaleString('ko-KR')}원`}</TableCell>
                       <TableCell className='text-center'>{`${item.productTotalPrice?.toLocaleString('ko-KR')}원`}</TableCell>
                     </TableRow>
@@ -197,78 +255,69 @@ function orderCheckoutPage() {
         </section>
 
         {/* 금액 정보 */}
-        <div className='grid gap-4 md:grid-cols-2'>
-          <section>
-            <Card className='h-full w-full gap-2'>
-              <CardHeader>
-                <CardTitle className='font-bold'>결제 수단</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RadioGroup
-                  defaultValue='tosspay'
-                  className='flex flex-col gap-2'
-                >
-                  <Card className='py-0 transition-colors has-data-[state=checked]:border-l-4 has-data-[state=checked]:border-blue-500'>
-                    <CardContent className='flex items-center gap-4 py-4'>
-                      <RadioGroupItem
-                        value='tosspay'
-                        id='tosspay'
-                      />
-                      <Label htmlFor='tosspay'>{'토스페이 (Toss Pay)'}</Label>
-                    </CardContent>
-                  </Card>
-                  <Card className='py-0 transition-colors has-data-[state=checked]:border-l-4 has-data-[state=checked]:border-blue-500'>
-                    <CardContent className='flex items-center gap-4 py-4'>
-                      <RadioGroupItem
-                        value='kakaoPay'
-                        id='kakaoPay'
-                      />
-                      <Label htmlFor='kakaoPay'>{'카카오페이 (Kakao Pay)'}</Label>
-                    </CardContent>
-                  </Card>
-                </RadioGroup>
-              </CardContent>
-            </Card>
-          </section>
+        <section>
+          <Card className='h-full w-full gap-2'>
+            <CardHeader>
+              <CardTitle className='font-bold'>결제 수단</CardTitle>
+            </CardHeader>
+            <CardContent className='flex flex-col gap-4'>
+              <Card className='py-0 transition-colors has-data-[state=checked]:border-l-4 has-data-[state=checked]:border-blue-500'>
+                <CardContent className='flex items-center gap-4 p-0'>
+                  <div
+                    id='payment-method'
+                    className='flex-1 overflow-hidden rounded-lg'
+                  />
+                </CardContent>
+              </Card>
+              <Card className='py-0 transition-colors has-data-[state=checked]:border-l-4 has-data-[state=checked]:border-blue-500'>
+                <CardContent className='flex items-center gap-4 p-0'>
+                  <div
+                    id='agreement'
+                    className='flex-1 overflow-hidden rounded-lg'
+                  />
+                </CardContent>
+              </Card>
+            </CardContent>
+          </Card>
+        </section>
 
-          <section className='flex flex-col gap-4'>
-            <Card className='w-full'>
-              <CardHeader>
-                <CardTitle>결제 금액 정보</CardTitle>
-                <CardDescription>결제하실 금액을 확인해 주세요.</CardDescription>
-              </CardHeader>
-              <CardContent className='flex flex-col gap-2'>
-                <span>{`총 상품 금액: ${checkout?.totalAmount.toLocaleString('ko-KR')}원`}</span>
-                <span>{`배송비: ${checkout?.shippingFee.toLocaleString('ko-KR')}원`}</span>
-                <span className='text-lg font-bold'>
-                  {`총 결제 금액: ${checkout?.finalAmount.toLocaleString('ko-KR')}원`}
-                </span>
-              </CardContent>
-            </Card>
+        <section className='flex flex-col gap-4'>
+          <Card className='w-full'>
+            <CardHeader>
+              <CardTitle>결제 금액 정보</CardTitle>
+              <CardDescription>결제하실 금액을 확인해 주세요.</CardDescription>
+            </CardHeader>
+            <CardContent className='flex flex-col gap-2'>
+              <span>{`총 상품 금액: ${checkout?.totalAmount.toLocaleString('ko-KR')}원`}</span>
+              <span>{`배송비: ${checkout?.shippingFee.toLocaleString('ko-KR')}원`}</span>
+              <span className='text-lg font-bold'>
+                {`총 결제 금액: ${checkout?.finalAmount.toLocaleString('ko-KR')}원`}
+              </span>
+            </CardContent>
+          </Card>
 
-            {/* 주문 버튼 */}
-            <div className='flex h-fit w-full flex-col gap-2'>
-              <Button
-                variant='default'
-                className='w-full py-6 text-lg'
-                onClick={handleOrder}
-                disabled={loading}
-                aria-label='결제하기 버튼'
-              >
-                {loading ? '결제 처리중...' : '결제하기'}
-              </Button>
-              <Button
-                variant='outline'
-                className='w-full py-6 text-lg'
-                onClick={() => navigate({ to: '/cart' })}
-                disabled={loading}
-                aria-label='장바구니로 돌아가기 버튼'
-              >
-                장바구니로 돌아가기
-              </Button>
-            </div>
-          </section>
-        </div>
+          {/* 주문 버튼 */}
+          <div className='flex h-fit w-full flex-col gap-2'>
+            <Button
+              variant='default'
+              className='w-full py-6 text-lg'
+              onClick={handlePayment}
+              disabled={loading}
+              aria-label='결제하기 버튼'
+            >
+              {loading ? '결제 처리중...' : '결제하기'}
+            </Button>
+            <Button
+              variant='outline'
+              className='w-full py-6 text-lg'
+              onClick={() => navigate({ to: '/cart' })}
+              disabled={loading}
+              aria-label='장바구니로 돌아가기 버튼'
+            >
+              장바구니로 돌아가기
+            </Button>
+          </div>
+        </section>
       </main>
     );
   }
