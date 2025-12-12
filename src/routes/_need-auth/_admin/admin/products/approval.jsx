@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-export const Route = createFileRoute('/_need-auth/_admin/admin/products')({
+export const Route = createFileRoute('/_need-auth/_admin/admin/products/approval')({
   component: AdminProductPendingPage,
 });
 
@@ -155,7 +155,7 @@ function AdminProductPendingPage() {
                   <div className='truncate font-medium'>{product.productName}</div>
                   <div className='text-muted-foreground text-xs'>{product.categoryName}</div>
                   <div className='text-muted-foreground text-[11px]'>
-                    {`신청일 : ${product.submitDate ? new Date(product.submitDate).toLocaleDateString() : '정보 없음'}`}
+                    {`신청일 : ${product.submitDate ? new Date(product.submitDate).toLocaleDateString() : `정보 없음`}`}
                   </div>
                 </div>
 

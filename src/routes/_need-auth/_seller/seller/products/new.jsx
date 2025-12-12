@@ -27,8 +27,9 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { Icon } from '@iconify/react';
 import { createFileRoute } from '@tanstack/react-router';
-import { Archive, DollarSign, Image, Package } from 'lucide-react';
+import { Archive, Image, Package } from 'lucide-react';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
@@ -36,15 +37,6 @@ import { toast } from 'sonner';
 export const Route = createFileRoute('/_need-auth/_seller/seller/products/new')({
   component: RouteComponent,
 });
-
-// const categories = [
-//   { id: 'fashion', name: '패션' },
-//   { id: 'electronics', name: '전자제품' },
-//   { id: 'home', name: '홈/리빙' },
-//   { id: 'beauty', name: '뷰티' },
-//   { id: 'food', name: '식품' },
-//   { id: 'books', name: '도서' },
-// ];
 
 function RouteComponent() {
   const [formData, setFormData] = useState({
@@ -283,7 +275,7 @@ function RouteComponent() {
                 {/* 상품 설명 */}
                 <Field className='gap-0'>
                   <Label htmlFor='productDescription'>
-                    상품 설명{' '}
+                    상품 설명
                     <span
                       className='text-red-500'
                       aria-label='필수'
@@ -324,8 +316,11 @@ function RouteComponent() {
                       htmlFor='productPrice'
                       className='flex items-center gap-1'
                     >
-                      <DollarSign className='h-4 w-4' />
-                      가격{' '}
+                      <Icon
+                        icon='fa7-solid:won'
+                        className='h-4 w-4'
+                      />
+                      가격
                       <span
                         className='text-red-500'
                         aria-label='필수'
@@ -365,7 +360,7 @@ function RouteComponent() {
                       className='flex items-center gap-1'
                     >
                       <Archive className='h-4 w-4' />
-                      재고{' '}
+                      재고
                       <span
                         className='text-red-500'
                         aria-label='필수'
@@ -411,7 +406,10 @@ function RouteComponent() {
                   <Image className='h-5 w-5' />
                   상품 사진
                 </CardTitle>
-                <p className='mt-2 text-sm text-gray-500'>
+                <p className='text-sm text-red-700'>
+                  {'(사진은 PNG 또는 JPEG 형식이어야 합니다.)'}
+                </p>
+                <p className='mt-2 text-sm'>
                   첫 번째 사진이 대표 사진으로 설정됩니다. 최대 10개까지 업로드 가능합니다.
                 </p>
               </CardHeader>
@@ -441,7 +439,7 @@ function RouteComponent() {
                 상세 정보 사진
               </CardTitle>
               <p className='mt-2 text-sm text-gray-500'>
-                상품의 상세 정보를 설명하는 사진을 업로드하세요. (선택사항)
+                {'상품의 상세 정보를 설명하는 사진을 업로드하세요. (선택사항)'}
               </p>
             </CardHeader>
             <CardContent>

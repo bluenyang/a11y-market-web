@@ -1,4 +1,21 @@
 import { sellerApi } from '@/api/seller-api';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ChartLine } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   CartesianGrid,
@@ -10,27 +27,13 @@ import {
   YAxis,
 } from 'recharts';
 
-/** 연도/월별 매출 추이 목데이터 */
-const MOCK_SALES_BY_MONTH = {
-  '2025-11': [
-    { date: '11-01', sales: 180000 },
-    { date: '11-05', sales: 120000 },
-    { date: '11-10', sales: 240000 },
-    { date: '11-15', sales: 300000 },
-    { date: '11-20', sales: 150000 },
-    { date: '11-25', sales: 390000 },
-  ],
-  '2025-12': [{ date: '12-03', sales: 350000 }],
-};
-
 export const DashboardDailyRevenue = () => {
-  const [selectedYear, setSelectedYear] = useState('2025');
-  const [selectedMonth, setSelectedMonth] = useState('11');
-
+  const [selectedPeriod, setSelectedPeriod] = useState(`2025-11`);
   const [data, setData] = useState([]);
 
   useEffect(() => {
     (async () => {
+      const [selectedYear, selectedMonth] = selectedPeriod.split('-');
       try {
         const resp = await sellerApi.getDailyRevenue(selectedYear, selectedMonth);
 
@@ -44,7 +47,7 @@ export const DashboardDailyRevenue = () => {
         console.error('일별 매출 데이터 조회 실패:', error);
       }
     })();
-  }, [selectedYear, selectedMonth]);
+  }, [selectedPeriod]);
 
   const format = (number) => new Intl.NumberFormat('ko-KR').format(number);
 
@@ -59,57 +62,73 @@ export const DashboardDailyRevenue = () => {
         </div>
 
         <div className='flex items-center gap-2'>
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            className='h-8 rounded border px-3 text-xs'
+          <Select
+            value={selectedPeriod}
+            onValueChange={setSelectedPeriod}
           >
-            <option value='2024'>2025년</option>
-          </select>
-
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className='h-8 rounded border px-3 text-xs'
-          >
-            <option value='11'>11월</option>
-            <option value='12'>12월</option>
-          </select>
+            <SelectTrigger className='h-8 rounded border px-3 text-xs'>
+              <SelectValue placeholder='기간 선택' />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>2025</SelectLabel>
+                <SelectItem value='2025-11'>2025년 11월</SelectItem>
+                <SelectItem value='2025-12'>2025년 12월</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <div className='h-64'>
-        <ResponsiveContainer
-          width='100%'
-          height='100%'
-        >
-          <LineChart
-            data={data}
-            margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+        {data.length === 0 ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia
+                variant='icon'
+                className='mb-0 flex size-24 rounded-full bg-neutral-200 dark:bg-neutral-800'
+              >
+                <ChartLine className='size-12' />
+              </EmptyMedia>
+              <EmptyTitle className='text-3xl font-bold'>매출 추이 데이터가 없습니다.</EmptyTitle>
+              <EmptyDescription className='text-lg'>
+                선택한 기간에 대한 매출 정보가 없습니다.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <ResponsiveContainer
+            width='100%'
+            height='100%'
           >
-            <CartesianGrid strokeDasharray='3 3' />
-            <XAxis
-              dataKey='date'
-              tick={{ fontSize: 11 }}
-            />
-            <YAxis
-              tickFormatter={(value) => `${value / 1000}k`}
-              tick={{ fontSize: 11 }}
-            />
-            <Tooltip
-              formatter={(value) => `${format(value)}원`}
-              labelFormatter={(label) => `날짜: ${label}`}
-            />
-            <Line
-              type='monotone'
-              dataKey='sales'
-              stroke='#4b5563'
-              strokeWidth={2}
-              dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+            <LineChart
+              data={data}
+              margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray='3 3' />
+              <XAxis
+                dataKey='date'
+                tick={{ fontSize: 11 }}
+              />
+              <YAxis
+                tickFormatter={(value) => `${value / 1000}k`}
+                tick={{ fontSize: 11 }}
+              />
+              <Tooltip
+                formatter={(value) => `${format(value)}원`}
+                labelFormatter={(label) => `날짜: ${label}`}
+              />
+              <Line
+                type='monotone'
+                dataKey='sales'
+                stroke='#4b5563'
+                strokeWidth={2}
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </section>
   );

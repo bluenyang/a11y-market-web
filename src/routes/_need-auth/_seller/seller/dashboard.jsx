@@ -2,9 +2,7 @@ import { DashboardDailyRevenue } from '@/components/seller/dashboard/daily-reven
 import { DashboardRecentOrder } from '@/components/seller/dashboard/recent-order';
 import { DashboardStatSection } from '@/components/seller/dashboard/stat-section';
 import { DashboardTopProduct } from '@/components/seller/dashboard/top-product';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 
 /** /seller/dashboard : 판매자 대시보드 */
 export const Route = createFileRoute('/_need-auth/_seller/seller/dashboard')({
@@ -34,40 +32,7 @@ function SellerDashboardPage() {
       <DashboardTopProduct />
 
       {/* 하단: 최근 주문 / 빠른 작업 */}
-      <div className='grid gap-8 lg:grid-cols-2'>
-        <DashboardRecentOrder />
-
-        <Card className='rounded-2xl'>
-          <CardHeader>
-            <CardTitle className='text-base'>빠른 작업</CardTitle>
-          </CardHeader>
-          <CardContent className='grid gap-3'>
-            <Button
-              asChild
-              className='w-full justify-start'
-              variant='outline'
-            >
-              <Link to='/seller/products/new'>상품 등록하기</Link>
-            </Button>
-
-            <Button
-              asChild
-              className='w-full justify-start'
-              variant='outline'
-            >
-              <Link to='/seller/products'>내 상품 관리</Link>
-            </Button>
-
-            <Button
-              asChild
-              className='w-full justify-start'
-              variant='outline'
-            >
-              <Link to='/seller/claims'>취소/반품 관리</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardRecentOrder />
     </main>
   );
 }

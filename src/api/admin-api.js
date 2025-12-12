@@ -152,4 +152,9 @@ export const adminApi = {
 
   updateSellerStatus: async (sellerId, status) =>
     await axiosInstance.patch(`/v1/admin/sellers/${sellerId}/status`, null, { params: { status } }),
+
+  getAllProducts: async (query, status, page, size) =>
+    await axiosInstance.get('/v1/admin/products', {
+      params: { query, status, page, size },
+    }),
 };

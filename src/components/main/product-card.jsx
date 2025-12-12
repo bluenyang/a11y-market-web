@@ -1,29 +1,20 @@
-import { cartApi } from '@/api/cart-api';
 import { ImageWithFallback } from '@/components/image-with-fallback';
 import { Badge } from '@/components/ui/badge';
 import { Link } from '@tanstack/react-router';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import { AddCartButton } from '../cart/add-cart-button';
 
 export const ProductCard = ({ product }) => {
-  const [loading, setLoading] = useState(false);
-
   const formattedPrice = product.productPrice.toLocaleString('ko-KR');
 
-  const handleAddToCart = async (event) => {
-    event.preventDefault();
-    setLoading(true);
-
-    try {
-      const resp = await cartApi.addCartItem(product.productId, 1);
-      if (resp.status === 201) {
-        toast.success(`${product.productName}이(가) 장바구니에 추가되었습니다.`);
-      }
-    } catch (error) {
-      toast.error('장바구니에 추가하는 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
+  const getImageUrl = () => {
+    console.log('Product images:', product.productImages);
+    if (product.productImages && product.productImages.length > 0) {
+      console.log('Using productImages for image URL');
+      return product.productImages[0].imageUrl;
+    } else if (product.productImageUrl) {
+      return product.productImageUrl;
+    } else {
+      return ''; // Fallback
     }
   };
 
@@ -35,7 +26,7 @@ export const ProductCard = ({ product }) => {
       <Link to={`/products/${product.productId}`}>
         <div className='relative aspect-square overflow-hidden rounded-t-lg'>
           <ImageWithFallback
-            src={product.productImageUrl || product.productImages[0]?.imageUrl}
+            src={getImageUrl()}
             alt={product.productName}
             className='size-full object-cover transition-transform duration-300 group-hover:scale-105'
           />

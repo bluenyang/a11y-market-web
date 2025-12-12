@@ -1,28 +1,24 @@
 // src/components/seller/order-summary-section.jsx
 import { Card } from '@/components/ui/card';
 
-export function OrderSummaryCard({ label, value, description, badgeClass }) {
+export function OrderSummaryCard({ label, value, description }) {
   return (
-    <Card className='relative flex h-[120px] flex-col justify-between rounded-xl border border-slate-200 bg-white px-5 py-3 shadow-sm'>
+    <Card className='relative flex h-[120px] flex-col justify-between rounded-xl border px-5 py-3 shadow-sm'>
       {/* 위쪽: 라벨 + 설명 */}
       <div className='mt-1 space-y-1 pr-12'>
-        <p className='font-kakao-little text-[11px] font-medium text-slate-500'>{label}</p>
-        {description && (
-          <p className='font-kakao-little text-[11px] text-slate-400'>{description}</p>
-        )}
+        <p className='font-kakao-little text-sm font-medium text-slate-500'>{label}</p>
+        {description && <p className='font-kakao-little text-sm text-slate-400'>{description}</p>}
       </div>
 
       {/* 아래쪽 숫자  */}
       <div className='pr-12 pb-1'>
         <p className='font-kakao-big text-lg leading-none text-slate-900'>{value}</p>
-        <div className='mt-2 h-px w-12 bg-slate-100' />
+        <div className='mt-2 h-px w-12' />
       </div>
 
       {/*동그라미 배지 */}
       <div
-        className={`absolute top-1/2 right-5 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border text-[11px] font-semibold ${
-          badgeClass ?? 'border-slate-200 bg-slate-50 text-slate-600'
-        }`}
+        className={`absolute top-1/2 right-5 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border text-sm font-semibold`}
       >
         {value}
       </div>
@@ -42,7 +38,7 @@ export function OrderStatusBadge({ status }) {
 
   return (
     <span
-      className={`font-kakao-little inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+      className={`font-kakao-little inline-flex items-center rounded-full border px-2 py-0.5 text-sm font-medium ${
         map[status] ?? 'border-slate-200 bg-slate-50 text-slate-700'
       }`}
     >
@@ -55,8 +51,8 @@ export function OrderStatusBadge({ status }) {
 export function InfoRow({ label, value }) {
   return (
     <div className='flex items-center justify-between gap-3 text-xs'>
-      <span className='font-kakao-little text-[11px] text-slate-500'>{label}</span>
-      <span className='font-kakao-little text-[11px] text-slate-800'>{value}</span>
+      <span className='font-kakao-little text-sm text-slate-500'>{label}</span>
+      <span className='font-kakao-little text-sm text-slate-800'>{value}</span>
     </div>
   );
 }

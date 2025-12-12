@@ -20,7 +20,7 @@ export const authApi = {
     try {
       const resp = await axiosInstance.post('/v1/auth/logout');
 
-      if (resp.status !== 204) {
+      if (resp.status !== 200) {
         throw new Error('로그아웃에 실패했습니다.');
       }
 

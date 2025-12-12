@@ -28,25 +28,32 @@ export const AddressSelector = ({ defaultAddressId, onSelectAddress }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
+  const [selectDialogOpen, setSelectDialogOpen] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      setIsLoading(true);
-      try {
-        const { data, status } = await addressApi.getAddressList();
-        if (status !== 200) {
-          throw new Error('Failed to fetch address list');
-        }
-
-        setAddresses(data);
-        setSelectedAddress(data.find((addr) => addr.addressId === defaultAddressId) || data[0]);
-      } catch (err) {
-        console.error('Failed to fetch addresses:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
+    fetchAddresses();
   }, []);
+
+  const fetchAddresses = async () => {
+    setIsLoading(true);
+    try {
+      const { data, status } = await addressApi.getAddressList();
+      if (status !== 200) {
+        throw new Error('Failed to fetch address list');
+      }
+      setAddresses(data);
+      if (selectedAddress == null) {
+        const defaultAddr = data.find((addr) => addr.addressId === defaultAddressId) || data[0];
+        setSelectedAddress(defaultAddr);
+        onSelectAddress(defaultAddr);
+      }
+    } catch (err) {
+      console.error('Failed to fetch addresses:', err);
+    } finally {
+      setIsLoading(false);
+      setSelectDialogOpen(true);
+    }
+  };
 
   const handleAddressSelect = (address) => {
     setSelectedAddress(address);
@@ -63,7 +70,7 @@ export const AddressSelector = ({ defaultAddressId, onSelectAddress }) => {
     return phoneNumber;
   };
 
-  if (isLoading || !selectedAddress) {
+  if (isLoading) {
     return <Spinner />;
   }
 
@@ -73,9 +80,16 @@ export const AddressSelector = ({ defaultAddressId, onSelectAddress }) => {
         <CardTitle>
           <span>배송지 정보</span>
         </CardTitle>
-        <CardDescription>선택된 배송지: {selectedAddress.addressName}</CardDescription>
+        {addresses.length > 0 && selectedAddress ? (
+          <CardDescription>{`선택된 배송지: ${selectedAddress.addressName}`}</CardDescription>
+        ) : (
+          <CardDescription>등록된 배송지가 없습니다.</CardDescription>
+        )}
         <CardAction className='self-center'>
-          <Dialog>
+          <Dialog
+            open={selectDialogOpen}
+            onOpenChange={setSelectDialogOpen}
+          >
             <DialogTrigger asChild>
               <Button
                 variant='default'
@@ -90,7 +104,10 @@ export const AddressSelector = ({ defaultAddressId, onSelectAddress }) => {
                 <DialogDescription>배송지를 선택해 주세요.</DialogDescription>
               </DialogHeader>
               <div className='grid gap-4'>
-                <AddressModifier mode='add' />
+                <AddressModifier
+                  mode='add'
+                  onChange={fetchAddresses}
+                />
                 {addresses.map((address) => (
                   <Item
                     variant='outline'
@@ -100,9 +117,9 @@ export const AddressSelector = ({ defaultAddressId, onSelectAddress }) => {
                     <ItemContent>
                       <ItemTitle>{address.addressName}</ItemTitle>
                       <ItemDescription>
-                        <span>{`${address.receiverName} | ${formatPhoneNumber(address.receiverPhone)}`}</span>
+                        <span>{`${address.receiverName || ''} | ${formatPhoneNumber(address.receiverPhone) || ''}`}</span>
                         <br />
-                        <span>{`${address.receiverAddr1} ${address.receiverAddr2}`}</span>
+                        <span>{`${address.receiverAddr1 || ''} ${address.receiverAddr2 || ''}`}</span>
                       </ItemDescription>
                     </ItemContent>
                     <ItemActions>
@@ -131,32 +148,40 @@ export const AddressSelector = ({ defaultAddressId, onSelectAddress }) => {
         </CardAction>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableBody>
-            <TableRow>
-              <TableHead className='w-[10%] pl-4 text-right'>배송지 이름</TableHead>
-              <TableCell className='border-l px-8'>{selectedAddress.addressName}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableHead className='w-[10%] pl-4 text-right'>수령인</TableHead>
-              <TableCell className='border-l px-8'>{selectedAddress.receiverName}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableHead className='w-[10%] pl-4 text-right'>연락처</TableHead>
-              <TableCell className='border-l px-8'>
-                {formatPhoneNumber(selectedAddress.receiverPhone)}
-              </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableHead className='w-[10%] pl-4 text-right'>우편번호</TableHead>
-              <TableCell className='border-l px-8'>{selectedAddress.receiverZipcode}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableHead className='w-[10%] pl-4 text-right'>주소</TableHead>
-              <TableCell className='border-l px-8'>{`${selectedAddress.receiverAddr1} ${selectedAddress.receiverAddr2}`}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+        {selectedAddress ? (
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableHead className='w-[10%] pl-4 text-right'>배송지 이름</TableHead>
+                <TableCell className='border-l px-8'>{selectedAddress.addressName || ''}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableHead className='w-[10%] pl-4 text-right'>수령인</TableHead>
+                <TableCell className='border-l px-8'>
+                  {selectedAddress.receiverName || ''}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableHead className='w-[10%] pl-4 text-right'>연락처</TableHead>
+                <TableCell className='border-l px-8'>
+                  {formatPhoneNumber(selectedAddress.receiverPhone) || ''}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableHead className='w-[10%] pl-4 text-right'>우편번호</TableHead>
+                <TableCell className='border-l px-8'>
+                  {selectedAddress.receiverZipcode || ''}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableHead className='w-[10%] pl-4 text-right'>주소</TableHead>
+                <TableCell className='border-l px-8'>{`${selectedAddress.receiverAddr1 || ''} ${selectedAddress.receiverAddr2 || ''}`}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        ) : (
+          <p>선택된 배송지가 없습니다.</p>
+        )}
       </CardContent>
     </Card>
   );

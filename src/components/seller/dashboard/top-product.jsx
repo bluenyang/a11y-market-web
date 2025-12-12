@@ -1,5 +1,13 @@
 import { sellerApi } from '@/api/seller-api';
 import { Badge } from '@/components/ui/badge';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { ChartColumnBig } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
@@ -45,34 +53,49 @@ export const DashboardTopProduct = () => {
       </div>
 
       <div className='h-64'>
-        <ResponsiveContainer
-          width='100%'
-          height='100%'
-        >
-          <BarChart
-            data={topProducts}
-            margin={{ top: 10, right: 20, left: 0, bottom: 40 }}
+        {topProducts.length === 0 ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia
+                variant='icon'
+                className='mb-0 flex size-24 rounded-full bg-neutral-200 dark:bg-neutral-800'
+              >
+                <ChartColumnBig className='size-12' />
+              </EmptyMedia>
+              <EmptyTitle className='w-full text-3xl font-bold'>판매 데이터가 없습니다.</EmptyTitle>
+              <EmptyDescription className='text-lg'>판매된 상품이 없습니다.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <ResponsiveContainer
+            width='100%'
+            height='100%'
           >
-            <CartesianGrid strokeDasharray='3 3' />
-            <XAxis
-              dataKey='name'
-              tick={{ fontSize: 11 }}
-              interval={0}
-              angle={-20}
-              textAnchor='end'
-            />
-            <YAxis />
-            <Tooltip
-              formatter={(value) => `${format(value)}개`}
-              labelFormatter={(label) => `상품: ${label}`}
-            />
-            <Bar
-              dataKey='sold'
-              fill='#4b5563'
-              radius={[6, 6, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+            <BarChart
+              data={topProducts}
+              margin={{ top: 10, right: 20, left: 0, bottom: 40 }}
+            >
+              <CartesianGrid strokeDasharray='3 3' />
+              <XAxis
+                dataKey='name'
+                tick={{ fontSize: 11 }}
+                interval={0}
+                angle={-20}
+                textAnchor='end'
+              />
+              <YAxis />
+              <Tooltip
+                formatter={(value) => `${format(value)}개`}
+                labelFormatter={(label) => `상품: ${label}`}
+              />
+              <Bar
+                dataKey='sold'
+                fill='#4b5563'
+                radius={[6, 6, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </section>
   );

@@ -3,15 +3,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Search, X } from 'lucide-react';
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
 
-export const ProductFilter = ({ onFilterChange }) => {
+export const ProductFilter = ({ filters, setFilters }) => {
   const { categories } = useSelector((state) => state.category);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [minRating, setMinRating] = useState(0);
+  const { searchQuery, categories: selectedCategories } = filters;
 
   const handleParentCategoryToggle = (parendCategoryId) => {
     const subCategories =
@@ -36,8 +33,11 @@ export const ProductFilter = ({ onFilterChange }) => {
       ];
     }
 
-    setSelectedCategories(newCategories);
-    applyFilters(searchQuery, newCategories, minRating);
+    setFilters((prev) => ({
+      ...prev,
+      categories: newCategories,
+    }));
+    applyFilters(searchQuery, newCategories);
   };
 
   const handleCategoryToggle = (categoryId) => {
@@ -45,36 +45,39 @@ export const ProductFilter = ({ onFilterChange }) => {
       ? selectedCategories.filter((id) => id !== categoryId)
       : [...selectedCategories, categoryId];
 
-    setSelectedCategories(newCategories);
-    applyFilters(searchQuery, newCategories, minRating);
+    setFilters((prev) => ({
+      ...prev,
+      categories: newCategories,
+    }));
+    applyFilters(searchQuery, newCategories);
   };
 
   const handleSearchChange = (e) => {
     const query = e.target.value;
-    setSearchQuery(query);
-    applyFilters(query, selectedCategories, minRating);
+    setFilters((prev) => ({
+      ...prev,
+      searchQuery: query,
+    }));
+    applyFilters(query, selectedCategories);
   };
 
-  const applyFilters = (query, cats, rating) => {
-    onFilterChange({
+  const applyFilters = (query, cats) => {
+    setFilters((prev) => ({
+      ...prev,
       searchQuery: query,
       categories: cats,
-      minRating: rating,
-    });
+    }));
   };
 
   const handleReset = () => {
-    setSearchQuery('');
-    setSelectedCategories([]);
-    setMinRating(0);
-    onFilterChange({
+    setFilters((prev) => ({
+      ...prev,
       searchQuery: '',
       categories: [],
-      minRating: 0,
-    });
+    }));
   };
 
-  const hasActiveFilters = searchQuery !== '' || selectedCategories.length > 0 || minRating > 0;
+  const hasActiveFilters = searchQuery !== '' || selectedCategories.length > 0;
 
   return (
     <div className='space-y-6 rounded-lg p-6 shadow-sm'>

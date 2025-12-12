@@ -166,4 +166,19 @@ export const sellerApi = {
   applySellerAccount: async (data) => await axiosInstance.post('/v1/seller/apply', data),
 
   getSellerInfo: async (sellerId) => await axiosInstance.get(`/v1/seller/info/${sellerId}`),
+
+  getReceivedOrders: async (page, size, status) =>
+    await axiosInstance.get('/v1/seller/orders/items', {
+      params: { page: page || 0, size: size || 10, orderItemStatus: status || '' },
+    }),
+
+  updateOrderItemStatus: async (orderItemId, status) =>
+    await axiosInstance.patch(`/v1/seller/orders/items/${orderItemId}/status`, {
+      status,
+    }),
+
+  updateProductStock: async (productId, newStock) =>
+    await axiosInstance.patch(`/v1/seller/products/${productId}/stock`, { productStock: newStock }),
+
+  updateSellerInfo: async (data) => await axiosInstance.put('/v1/seller/me', data),
 };

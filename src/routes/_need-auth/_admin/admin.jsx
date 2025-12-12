@@ -38,7 +38,8 @@ function RouteComponent() {
     { label: '회원 관리', path: '/admin/users' },
     { label: '판매자 관리', path: '/admin/sellers' },
     { label: '판매자 승인 관리', path: '/admin/sellers/approval' },
-    { label: '상품 승인 관리', path: '/admin/products' },
+    { label: '상품 관리', path: '/admin/products' },
+    { label: '상품 승인 관리', path: '/admin/products/approval' },
     { label: '주문 관리', path: '/admin/orders' },
   ];
 

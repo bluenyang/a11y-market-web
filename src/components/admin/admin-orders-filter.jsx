@@ -121,13 +121,13 @@ export default function AdminOrdersFilter({ onFilterChange }) {
 
       <div className='flex justify-end gap-3'>
         <Button
-          className='bg-black text-white'
+          variant='default'
           onClick={handleSearch}
         >
           검색
         </Button>
         <Button
-          className='border border-black bg-white text-black hover:text-white'
+          variant='outline'
           onClick={resetFilters}
         >
           초기화

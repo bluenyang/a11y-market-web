@@ -38,31 +38,22 @@ function RouteComponent() {
   const [products, setProducts] = useState([]);
   const [filters, setFilters] = useState({
     searchQuery: searchQuery,
-    categories: [categoryId],
+    categories: categoryId ? [categoryId] : [],
     isA11yGuaranteed: isA11yGuaranteed,
     sellerGrade: sellerGrade,
-    priceRange: [0, 1000000],
   });
   const [sortBy, setSortBy] = useState('on-development');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      searchQuery: searchQuery,
-      categories: categoryId ? [categoryId] : [],
-      isA11yGuaranteed: isA11yGuaranteed,
-      sellerGrade: sellerGrade,
-    }));
-
     (async () => {
       setIsLoading(true);
       try {
         const resp = await productApi.getProducts({
-          search: searchQuery,
-          categoryId: categoryId,
-          certified: isA11yGuaranteed,
-          grade: sellerGrade,
+          search: filters.searchQuery,
+          categoryId: filters.categories.length > 0 ? filters.categories[0] : '',
+          certified: filters.isA11yGuaranteed,
+          grade: filters.sellerGrade,
         });
 
         if (resp.status === 200) {
@@ -75,7 +66,16 @@ function RouteComponent() {
         setIsLoading(false);
       }
     })();
-  }, [searchQuery, categoryId, isA11yGuaranteed, sellerGrade]);
+  }, [
+    filters.searchQuery,
+    filters.categories,
+    filters.isA11yGuaranteed,
+    filters.sellerGrade,
+    searchQuery,
+    categoryId,
+    isA11yGuaranteed,
+    sellerGrade,
+  ]);
 
   const filteredProducts = products.filter((product) => {
     if (!!filters.searchQuery) {
@@ -127,7 +127,10 @@ function RouteComponent() {
 
         <div className='lg:grid lg:grid-cols-[280px_1fr] lg:gap-6'>
           <aside className='mb-6 lg:mb-0'>
-            <ProductFilter onFilterChange={setFilters} />
+            <ProductFilter
+              filters={filters}
+              setFilters={setFilters}
+            />
           </aside>
 
           {/* 우측: 정렬 및 상품 그리드 */}

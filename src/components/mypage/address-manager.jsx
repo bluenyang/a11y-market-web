@@ -1,18 +1,16 @@
+import { addressApi } from '@/api/address-api';
 import AddressList from '@/components/address/address-list';
 import DefaultAddress from '@/components/address/default-address';
-import NewAddressForm from '@/components/address/new-address-form';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useState, useEffect } from 'react';
-import { addressApi } from '@/api/address-api';
+import { NewAddressForm } from '@/components/address/new-address-form';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 export const AddressManager = () => {
   const [activeTab, setActiveTab] = useState('default');
   const [editingAddress, setEditingAddress] = useState(null);
-
   const [addresses, setAddresses] = useState([]);
-
   const handleEdit = (addr) => setEditingAddress(addr);
 
   const handleDelete = async (addressId) => {
@@ -103,11 +101,7 @@ export const AddressManager = () => {
           {/* 기본배송지 */}
           <TabsContent value='default'>
             {editingAddress?.addressId === defaultAddr?.addressId ? (
-              <NewAddressForm
-                initialForm={editingAddress}
-                onSave={handleSave}
-                onCancel={() => setEditingAddress(null)}
-              />
+              <NewAddressForm mode='add' />
             ) : (
               <DefaultAddress
                 defaultAddress={defaultAddr}
@@ -118,16 +112,14 @@ export const AddressManager = () => {
 
           {/* 신규배송지 */}
           <TabsContent value='new'>
-            <NewAddressForm
-              onSave={handleSave}
-              onCancel={() => setEditingAddress(null)}
-            />
+            <NewAddressForm mode='add' />
           </TabsContent>
 
           {/* 배송지 목록 */}
           <TabsContent value='list'>
             {editingAddress ? (
               <NewAddressForm
+                mode='edit'
                 initialForm={editingAddress}
                 onSave={handleSave}
                 onCancel={() => setEditingAddress(null)}

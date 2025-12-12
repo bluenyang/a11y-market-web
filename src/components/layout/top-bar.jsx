@@ -182,6 +182,15 @@ export default function TopBar() {
                 placeholder='검색어를 입력하세요'
                 className='pl-10'
                 aria-label='검색어 입력'
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const query = e.currentTarget.value.trim();
+                    if (query) {
+                      navigate({ to: '/products', search: { searchQuery: query } });
+                      e.currentTarget.value = '';
+                    }
+                  }
+                }}
               />
             </ItemContent>
           </Item>

@@ -14,11 +14,17 @@ import {
 } from '@/components/ui/table';
 import { fetchCartCount } from '@/store/cart-slice';
 import { MinusIcon, PlusIcon, TrashIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
 
-export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelectedItems, onChangeQuantity, }) => {
+export const CartGroup = ({
+  groupData,
+  onGroupDelete,
+  selectedItems,
+  setSelectedItems,
+  onChangeQuantity,
+}) => {
   const [data, setData] = useState(groupData.items);
   const dispatch = useDispatch();
 
@@ -36,23 +42,22 @@ export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelected
 
   //판매자 그룹 안에서만 동작하도록 수정
   const handleSelectAll = (isSelected) => {
-    if(isSelected) {
+    if (isSelected) {
       const allIds = data.map((item) => item.cartItemId);
-      
-      setSelectedItems(prev => {
+
+      setSelectedItems((prev) => {
         const updated = new Set(prev);
-        allIds.forEach(id => updated.add(id));
+        allIds.forEach((id) => updated.add(id));
         return updated;
       });
-
     } else {
       const allIds = data.map((item) => item.cartItemId);
 
-      setSelectedItems(prev => {
+      setSelectedItems((prev) => {
         const updated = new Set(prev);
-        allIds.forEach(id => updated.delete(id));
+        allIds.forEach((id) => updated.delete(id));
         return updated;
-      })
+      });
     }
   };
 
@@ -123,7 +128,7 @@ export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelected
 
   return (
     <div className='bg-card text-card-foreground w-full overflow-hidden rounded-md border'>
-      <Table>
+      <Table className='table-fixed'>
         <TableHeader>
           <TableRow>
             <TableHead className='w-[5%] py-4 text-center'>
@@ -142,7 +147,7 @@ export const CartGroup = ({ groupData, onGroupDelete, selectedItems, setSelected
           </TableRow>
           <TableRow>
             <TableHead className='w-[5%] py-2 text-center text-lg font-bold'>선택</TableHead>
-            <TableHead className='w-[10%] py-2 text-center text-lg font-bold'>
+            <TableHead className='w-[10%] truncate py-2 text-center text-lg font-bold'>
               상품 이미지
             </TableHead>
             <TableHead className='w-[40%] py-2 text-lg font-bold'>상품명</TableHead>

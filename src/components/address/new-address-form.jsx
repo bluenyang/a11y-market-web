@@ -1,208 +1,254 @@
+import { addressApi } from '@/api/address-api';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { ButtonGroup } from '@/components/ui/button-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { useEffect, useState } from 'react';
+import DaumPostcodeEmbed from 'react-daum-postcode';
 import { toast } from 'sonner';
 
-const EMPTY_FORM = {
-  addressId: undefined,
-  addressName: '',
-  receiverName: '',
-  receiverZipcode: '',
-  receiverAddr1: '',
-  receiverAddr2: '',
-  receiverPhone: '',
-  isDefault: false,
-};
-
-export default function NewAddressForm({ initialForm = null, onSave, onCancel }) {
-  const [form, setForm] = useState(EMPTY_FORM);
+export const NewAddressForm = ({ mode, initialForm = null, onSave, onCancel }) => {
+  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
+  const [formattedPhone, setFormattedPhone] = useState('');
+  const [formData, setFormData] = useState({
+    addressName: '',
+    receiverName: '',
+    receiverPhone: '',
+    receiverZipcode: '',
+    receiverAddr1: '',
+    receiverAddr2: '',
+    isDefault: false,
+  });
 
   useEffect(() => {
     if (initialForm) {
-      setForm((prev) => ({ ...prev, ...initialForm }));
-    } else {
-      setForm(EMPTY_FORM);
+      setFormData({
+        addressId: initialForm.addressId,
+        addressName: initialForm.addressName,
+        receiverName: initialForm.receiverName,
+        receiverPhone: initialForm.receiverPhone,
+        receiverZipcode: initialForm.receiverZipcode,
+        receiverAddr1: initialForm.receiverAddr1,
+        receiverAddr2: initialForm.receiverAddr2,
+        isDefault: initialForm.isDefault,
+      });
+      setFormattedPhone(formatPhoneNumber(initialForm.receiverPhone));
     }
   }, [initialForm]);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
+  const handleOnComplete = (data) => {
+    let fullAddress = data.address;
+    let extraAddress = '';
 
-  const handleSubmit = (e) => {
-    e?.preventDefault?.();
-    if (!form.addressName || !form.receiverName || !form.receiverZipcode || !form.receiverAddr1) {
-      toast.message('입력하지 않은 항목이 있습니다.');
-      return;
+    if (data.addressType === 'R') {
+      if (data.bname !== '') {
+        extraAddress += data.bname;
+      }
+      if (data.buildingName !== '') {
+        extraAddress += extraAddress !== '' ? `, ${data.buildingName}` : data.buildingName;
+      }
+      fullAddress += extraAddress !== '' ? ` (${extraAddress})` : '';
     }
-    onSave && onSave(form);
+
+    setFormData((prev) => ({
+      ...prev,
+      receiverZipcode: data.zonecode,
+      receiverAddr1: fullAddress,
+    }));
+    setIsAddressDialogOpen(false);
   };
 
-  const handleReset = () => {
-    setForm(EMPTY_FORM);
-    onCancel && onCancel();
+  const transparentScrollbarStyle =
+    '[&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-400 [&::-webkit-scrollbar-thumb:hover]:bg-neutral-500 [&::-webkit-scrollbar-track]:bg-transparent';
+
+  const formatPhoneNumber = (value) => {
+    if (!value) return '';
+    const input = value.replace(/[^0-9]/g, '');
+    if (input.length <= 3) {
+      return input;
+    } else if (input.length <= 7) {
+      return `${input.slice(0, 3)}-${input.slice(3)}`;
+    } else if (input.length <= 10) {
+      return `${input.slice(0, 3)}-${input.slice(3, 6)}-${input.slice(6)}`;
+    } else {
+      return `${input.slice(0, 3)}-${input.slice(3, 7)}-${input.slice(7)}`;
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log('Submitting form data:', formData);
+    try {
+      if (mode === 'add') {
+        await addressApi.createAddress(formData);
+      } else {
+        await addressApi.updateAddress(formData.addressId, formData);
+      }
+      toast.success('배송지를 저장했습니다.');
+      onSave();
+    } catch (err) {
+      console.error('배송지 저장 실패:', err);
+      toast.error(err.message || '배송지 저장에 실패했습니다.');
+    }
   };
 
   return (
-    <>
-      <Card>
-        <CardContent>
-          <form
-            className='space-y-4'
-            onSubmit={handleSubmit}
+    <div
+      className={`flex max-h-[80vh] w-full flex-col gap-4 overflow-y-auto p-4 ${transparentScrollbarStyle}`}
+    >
+      {isAddressDialogOpen ? (
+        <>
+          <DaumPostcodeEmbed
+            onComplete={handleOnComplete}
+            className='h-[400px]'
+          />
+          <Button
+            variant='default'
+            className='mt-2'
+            onClick={() => setIsAddressDialogOpen(false)}
           >
-            <FieldGroup>
-              <Field>
-                <div className='flex items-center gap-2'>
-                  <FieldLabel
-                    htmlFor='addressName'
-                    className='w-16'
-                  >
-                    배송지명
-                  </FieldLabel>
-                  <Input
-                    id='addressName'
-                    name='addressName'
-                    value={form.addressName}
-                    onChange={handleChange}
-                    placeholder='예: 우리집, 회사 등'
-                    className='w-64'
+            닫기
+          </Button>
+        </>
+      ) : (
+        <>
+          <div>
+            <h3 className='text-lg font-semibold'>
+              {mode === 'add' ? '배송지 추가' : '배송지 수정'}
+            </h3>
+            <p className='text-sm text-neutral-600'>
+              {mode === 'add' ? '새로운 배송지를 추가합니다.' : '기존 배송지를 수정합니다.'}
+            </p>
+          </div>
+          <Separator className='mt-2 mb-4 rounded-full border border-neutral-300' />
+          <FieldGroup>
+            <Field>
+              <div className='flex items-center justify-between'>
+                <FieldLabel htmlFor='addressName'>주소명</FieldLabel>
+                <div className='flex flex-row items-center gap-2'>
+                  <Checkbox
+                    id='isDefault'
+                    checked={formData.isDefault}
+                    onCheckedChange={(value) =>
+                      setFormData((prev) => ({ ...prev, isDefault: value }))
+                    }
                   />
-                  <Label>
-                    <Checkbox
-                      name='isDefault'
-                      checked={!!form.isDefault}
-                      onCheckedChange={(checked) =>
-                        setForm((prev) => ({ ...prev, isDefault: !!checked }))
-                      }
-                    />
-                    기본배송지로 설정
+                  <Label
+                    htmlFor='isDefault'
+                    className='text-sm text-neutral-500'
+                  >
+                    기본 배송지로 설정
                   </Label>
                 </div>
-              </Field>
-
-              <Field>
-                <div className='flex items-center gap-2'>
-                  <FieldLabel
-                    htmlFor='receiverName'
-                    className='w-16'
-                  >
-                    수령인
-                  </FieldLabel>
-                  <Input
-                    id='receiverName'
-                    name='receiverName'
-                    value={form.receiverName}
-                    onChange={handleChange}
-                    placeholder='수령인 이름'
-                    className='w-64'
-                  />
-                </div>
-              </Field>
-
-              <Field>
-                <div className='flex items-center gap-2'>
-                  <FieldLabel
-                    htmlFor='receiverPhone'
-                    className='w-16'
-                  >
-                    연락처
-                  </FieldLabel>
-                  <Input
-                    id='receiverPhone'
-                    name='receiverPhone'
-                    value={form.receiverPhone}
-                    onChange={handleChange}
-                    placeholder='01012345678'
-                    className='w-64'
-                  />
-                </div>
-              </Field>
-
-              <Field>
-                <div className='flex items-center gap-2'>
-                  <FieldLabel
-                    htmlFor='receiverZipcode'
-                    className='w-16'
-                  >
-                    우편번호
-                  </FieldLabel>
-                  <Input
-                    id='receiverZipcode'
-                    name='receiverZipcode'
-                    value={form.receiverZipcode}
-                    onChange={handleChange}
-                    placeholder='예: 12345'
-                    className='w-64'
-                  />
-                </div>
-              </Field>
-
-              <Field>
-                <div className='flex items-center gap-2'>
-                  <FieldLabel
-                    htmlFor='receiverAddr1'
-                    className='w-16'
-                  >
-                    주소1
-                  </FieldLabel>
-                  <Input
-                    id='receiverAddr1'
-                    name='receiverAddr1'
-                    value={form.receiverAddr1}
-                    onChange={handleChange}
-                    placeholder='도로명/지번'
-                    className='w-100'
-                  />
-                </div>
-              </Field>
-
-              <Field>
-                <div className='flex items-center gap-2'>
-                  <FieldLabel
-                    htmlFor='receiverAddr2'
-                    className='w-16'
-                  >
-                    주소2
-                  </FieldLabel>
-                  <Input
-                    id='receiverAddr2'
-                    name='receiverAddr2'
-                    value={form.receiverAddr2}
-                    onChange={handleChange}
-                    placeholder='상세주소 예: 101동 1001호'
-                    className='w-100'
-                  />
-                </div>
-              </Field>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-
-      <div className='mt-8 flex justify-center gap-2'>
-        <Button
-          onClick={handleSubmit}
-          variant='default'
-        >
-          {form.addressId ? '수정' : '저장'}
-        </Button>
-        <Button
-          type='button'
-          onClick={handleReset}
-          variant='outline'
-        >
-          취소
-        </Button>
-      </div>
-    </>
+              </div>
+              <Input
+                id='addressName'
+                placeholder='주소명을 입력하세요'
+                value={formData.addressName}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, addressName: value.target.value }))
+                }
+                required
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor='receiverName'>받는 분</FieldLabel>
+              <Input
+                id='receiverName'
+                placeholder='받는 분 이름을 입력하세요'
+                value={formData.receiverName}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, receiverName: value.target.value }))
+                }
+                required
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor='receiverPhone'>전화번호</FieldLabel>
+              <Input
+                id='receiverPhone'
+                placeholder='받는 분 전화번호를 입력하세요'
+                maxLength={15}
+                value={formattedPhone}
+                onChange={(value) => {
+                  setFormData((prev) => ({ ...prev, receiverPhone: value.target.value }));
+                  setFormattedPhone(formatPhoneNumber(value.target.value));
+                }}
+                required
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor='receiverZipcode'>우편번호</FieldLabel>
+              <ButtonGroup>
+                <Input
+                  id='receiverZipcode'
+                  placeholder='우편번호'
+                  value={formData.receiverZipcode}
+                  onChange={(value) =>
+                    setFormData((prev) => ({ ...prev, receiverZipcode: value.target.value }))
+                  }
+                  readOnly
+                  required
+                />
+                <Button
+                  variant='outline'
+                  className={`bg-neutral-50 hover:bg-neutral-200`}
+                  onClick={() => setIsAddressDialogOpen(true)}
+                >
+                  우편번호 찾기
+                </Button>
+              </ButtonGroup>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor='receiverAddr1'>주소</FieldLabel>
+              <Input
+                id='receiverAddr1'
+                placeholder='주소를 입력하세요'
+                value={formData.receiverAddr1}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, receiverAddr1: value.target.value }))
+                }
+                readOnly
+                required
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor='receiverAddr2'>상세주소</FieldLabel>
+              <Input
+                id='receiverAddr2'
+                placeholder='상세주소를 입력하세요'
+                value={formData.receiverAddr2}
+                onChange={(value) =>
+                  setFormData((prev) => ({ ...prev, receiverAddr2: value.target.value }))
+                }
+                required
+              />
+            </Field>
+          </FieldGroup>
+          <Button
+            variant='default'
+            className='mt-4'
+            type='submit'
+            onClick={handleSubmit}
+            aria-label={mode === 'add' ? '배송지 추가 버튼' : '배송지 수정 버튼'}
+          >
+            {mode === 'add' ? '추가하기' : '수정하기'}
+          </Button>
+          {mode !== 'add' && (
+            <Button
+              variant='outline'
+              type='reset'
+              aria-label='배송지 수정 취소 버튼'
+              onClick={onCancel}
+            >
+              취소
+            </Button>
+          )}
+        </>
+      )}
+    </div>
   );
-}
+};

@@ -1,5 +1,6 @@
 import { sellerApi } from '@/api/seller-api';
 import { LoadingEmpty } from '@/components/main/loading-empty';
+import { UpdateStock } from '@/components/seller/products/update-stock';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
@@ -28,8 +29,8 @@ export const Route = createFileRoute('/_need-auth/_seller/seller/products/')({
 function SellerProductListPage() {
   // hooks
   const { isLoading } = useSelector((state) => state.auth);
-
   const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
@@ -92,7 +93,7 @@ function SellerProductListPage() {
         className='grid grid-cols-12 items-center px-4 py-3 text-sm'
       >
         <div
-          className='col-span-5 truncate'
+          className='col-span-4 truncate'
           tabIndex={0}
           aria-label={`상품명: ${product.productName}`}
         >
@@ -118,11 +119,24 @@ function SellerProductListPage() {
         </div>
 
         <div
-          className='col-span-1 text-center tabular-nums'
+          className='col-span-2 flex flex-col text-center tabular-nums'
           aria-label={`재고 수: ${product.productStock} 개`}
           tabIndex={0}
         >
           {`${product.productStock} 개`}
+          <UpdateStock
+            productId={product.productId}
+            currentStock={product.productStock}
+            variant='outline'
+            className='ml-2 px-2 py-1 text-xs'
+            onStockUpdate={(id, newStock) => {
+              setProducts((prevProducts) =>
+                prevProducts.map((p) =>
+                  p.productId === id ? { ...p, productStock: newStock } : p,
+                ),
+              );
+            }}
+          />
         </div>
 
         <div
@@ -222,9 +236,22 @@ function SellerProductListPage() {
           </p>
         </div>
 
-        <Button asChild>
-          <Link to='/seller/products/new'>상품 등록하기</Link>
-        </Button>
+        <div className='flex flex-col gap-2'>
+          <Button
+            variant='outline'
+            className='hover:bg-blue-100 dark:hover:bg-blue-900'
+            onClick={() => navigate({ to: '/seller/dashboard' })}
+          >
+            대시보드로 이동
+          </Button>
+          <Button
+            variant='outline'
+            className='hover:bg-green-100 dark:hover:bg-green-900'
+            onClick={() => navigate({ to: '/seller/products/new' })}
+          >
+            상품 등록하기
+          </Button>
+        </div>
       </section>
 
       <section className='mb-6 grid gap-4 sm:grid-cols-3'>
@@ -310,9 +337,9 @@ function SellerProductListPage() {
 
       <section className='bg-card rounded-xl border'>
         <div className='text-muted-foreground grid grid-cols-12 border-b px-4 py-3 text-xs font-medium'>
-          <div className='col-span-5'>상품명</div>
+          <div className='col-span-4'>상품명</div>
           <div className='col-span-2 text-center'>판매가</div>
-          <div className='col-span-1 text-center'>재고</div>
+          <div className='col-span-2 text-center'>재고</div>
           <div className='col-span-2 text-center'>상태</div>
           <div className='col-span-2 text-center'>관리</div>
         </div>

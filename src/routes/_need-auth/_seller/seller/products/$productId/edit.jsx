@@ -581,6 +581,7 @@ function SellerProductEditPage() {
                     type='button'
                     variant='outline'
                     className='h-9 w-full'
+                    onClick={() => navigate({ to: '/seller/products' })}
                   >
                     취소
                   </Button>

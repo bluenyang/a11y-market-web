@@ -1,10 +1,10 @@
 // src/routes/_need-auth/_admin/admin/orders.jsx
-import { Fragment, useEffect, useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
+import { Fragment, useEffect, useState } from 'react';
 
+import { adminApi } from '@/api/admin-api';
 import AdminOrdersFilter from '@/components/admin/admin-orders-filter';
 import OrderItemsDialog from '@/components/admin/order-items-dialog';
-import { adminApi } from '@/api/admin-api';
 
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
@@ -216,9 +216,9 @@ function RouteComponent() {
 
   return (
     <div className='max-w-8xl mx-auto w-full px-4 pt-4'>
-      <div className='font-kakao-big mb-6 text-center text-3xl font-semibold'>주문 관리</div>
+      <div className='mb-6 text-center text-3xl font-semibold'>주문 관리</div>
 
-      <h3 className='font-kakao-big my-6 text-center'>
+      <h3 className='my-6 text-center'>
         주문 상태, 기간 등을 기준으로 주문을 조회하고 관리할 수 있습니다.
       </h3>
 

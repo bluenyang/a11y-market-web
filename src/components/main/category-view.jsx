@@ -7,7 +7,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { ProductCard } from './product-card';
 
-export function CategoryView({ products }) {
+export function CategoryView() {
   const navigate = useNavigate();
   const [itemList, setItemList] = useState([]);
 
@@ -25,9 +25,7 @@ export function CategoryView({ products }) {
   }, []);
 
   const handleSelectCategory = (categoryId) => {
-    const filteredProducts = productsDummyData.filter(
-      (product) => product.categoryId === categoryId,
-    );
+    const filteredProducts = itemList.filter((product) => product.categoryId === categoryId);
     setProductList(filteredProducts);
   };
 

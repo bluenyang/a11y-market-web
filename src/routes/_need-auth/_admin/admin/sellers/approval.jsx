@@ -13,6 +13,16 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -132,7 +142,7 @@ function RouteComponent() {
         </div>
       </section>
 
-      <section className='border-muted-foreground/20 bg-card mb-8 rounded-2xl border p-4'>
+      <section className='border-muted-foreground/20 bg-card mb-8 flex flex-col gap-4 rounded-2xl border p-4'>
         {sellers.length === 0 && (
           <Empty>
             <EmptyHeader>
@@ -158,7 +168,84 @@ function RouteComponent() {
                   variant='outline'
                 >
                   <ItemContent>
-                    <ItemTitle className='text-lg font-bold'>{seller.sellerName}</ItemTitle>
+                    <ItemTitle className='text-lg font-bold'>
+                      {seller.sellerName}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant='outline'
+                            className='rounded-full px-2 py-0 text-xs'
+                            aria-label='판매자 신청 정보 보기 버튼'
+                          >
+                            신청 정보 보기
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle className='mb-4 text-lg font-bold'>
+                              {`${seller.sellerName}님의 판매자 신청 정보`}
+                            </DialogTitle>
+                            <DialogDescription className='flex flex-col space-y-2'>
+                              {`아래는 ${seller.sellerName}님이 제출한 판매자 신청 정보입니다.`}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className='mt-4 flex flex-col space-y-2'>
+                            <span>
+                              <strong>판매자 상호명:</strong> {seller.sellerName}
+                            </span>
+                            <span>
+                              <strong>이름:</strong> {seller.sellerName}
+                            </span>
+                            <span>
+                              <strong>이메일:</strong> {seller.userEmail}
+                            </span>
+                            <span>
+                              <strong>전화번호:</strong> {seller.userPhone}
+                            </span>
+                            <span>
+                              <strong>사업자등록번호:</strong> {seller.businessNumber}
+                            </span>
+                            <span>
+                              <strong>판매자 소개:</strong> {seller.sellerIntro}
+                            </span>
+                          </div>
+                          <DialogFooter>
+                            <DialogClose asChild>
+                              <Button
+                                variant='default'
+                                className='bg-primary hover:bg-primary/80'
+                                aria-label='판매자 신청 승인 버튼'
+                                onClick={() => {
+                                  handleApprove(seller.sellerId);
+                                }}
+                              >
+                                승인
+                              </Button>
+                            </DialogClose>
+                            <DialogClose asChild>
+                              <Button
+                                variant='outline'
+                                className='text-destructive border-destructive hover:bg-destructive/50 hover:text-white'
+                                aria-label='판매자 신청 거절 버튼'
+                                onClick={() => {
+                                  handleReject(seller.sellerId);
+                                }}
+                              >
+                                거절
+                              </Button>
+                            </DialogClose>
+                            <DialogClose asChild>
+                              <Button
+                                variant='outline'
+                                aria-label='판매자 신청 정보 닫기 버튼'
+                              >
+                                닫기
+                              </Button>
+                            </DialogClose>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </ItemTitle>
                     <ItemDescription className='text-primary flex flex-col space-y-1'>
                       <span>
                         <strong>사업자등록번호:</strong> {seller.businessNumber}

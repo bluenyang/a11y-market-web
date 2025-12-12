@@ -5,17 +5,12 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { statusLabel } from '@/constants/order-item-status';
 import { useNavigate } from '@tanstack/react-router';
 import { ClipboardList } from 'lucide-react';
+import { ImageWithFallback } from '../image-with-fallback';
 import { Button } from '../ui/button';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '../ui/item';
 
 export default function OrderCard({ order }) {
   const navigate = useNavigate();
-
-  const getLastOfUUID = (uuid) => {
-    if (!uuid) return '';
-    const parts = uuid.split('-');
-    return parts[parts.length - 1];
-  };
 
   return (
     <Card>
@@ -36,7 +31,7 @@ export default function OrderCard({ order }) {
               className='border-border cursor-pointer space-y-2 rounded-lg border p-4 hover:shadow-md'
             >
               <ItemMedia>
-                <img
+                <ImageWithFallback
                   src={item.productImageUrl}
                   alt={item.productName}
                   className='aspect-3/2 h-16 rounded-md object-cover'
@@ -47,18 +42,20 @@ export default function OrderCard({ order }) {
                   }}
                 />
               </ItemMedia>
-              <ItemContent>
+              <ItemContent className='min-w-0 space-y-2'>
                 <ItemTitle
-                  className='w-full justify-start gap-4 text-lg font-bold'
+                  className='flex w-full items-center gap-4 text-lg font-bold'
                   onClick={() => {
                     navigate({
                       to: `/products/${item.productId}`,
                     });
                   }}
                 >
-                  <ClipboardList />
-                  {`상품 이름: ${item.productName}`}
-                  <Badge className={badge.className}>{badge.label}</Badge>
+                  <ClipboardList className='shrink-0' />
+                  <span className='min-w-0 flex-1 truncate'>
+                    {`상품 이름: ${item.productName}`}
+                  </span>
+                  <Badge className={`${badge.className} shrink-0`}>{badge.label}</Badge>
                 </ItemTitle>
                 <ItemDescription>
                   {`상품 수: ${item.productQuantity}개 | 총 금액: ${item.productTotalPrice.toLocaleString('ko-KR')}원`}
