@@ -10,46 +10,40 @@ export const ProductFilter = ({ filters, setFilters }) => {
 
   const { searchQuery, categories: selectedCategories } = filters;
 
-  const handleParentCategoryToggle = (parendCategoryId) => {
+  const handleParentCategoryToggle = (parentCategory) => {
     const subCategories =
       categories
-        .find((cat) => cat.categoryId === parendCategoryId)
+        .find((cat) => cat.categoryId === parentCategory.categoryId)
         ?.subCategories.map((subCat) => subCat.categoryId) || [];
 
-    const isParentSelected = selectedCategories.includes(parendCategoryId);
-    let newCategories = [];
+    const isAllSubSelected = subCategories.every((subCatId) =>
+      selectedCategories.includes(subCatId),
+    );
 
-    if (isParentSelected) {
-      // 부모 카테고리가 선택된 경우, 부모와 하위 카테고리 모두 선택 해제
+    let newCategories;
+    if (isAllSubSelected) {
       newCategories = selectedCategories.filter(
-        (id) => id !== parendCategoryId && !subCategories.includes(id),
+        (id) => id !== parentCategory.categoryId && !subCategories.includes(id),
       );
     } else {
-      // 부모 카테고리가 선택되지 않은 경우, 부모와 하위 카테고리 모두 선택
-      newCategories = [
-        ...selectedCategories,
-        parendCategoryId,
-        ...subCategories.filter((id) => !selectedCategories.includes(id)),
-      ];
+      newCategories = [...selectedCategories, parentCategory.categoryId, ...subCategories];
     }
 
     setFilters((prev) => ({
       ...prev,
       categories: newCategories,
     }));
-    applyFilters(searchQuery, newCategories);
   };
 
   const handleCategoryToggle = (categoryId) => {
     const newCategories = selectedCategories.includes(categoryId)
-      ? selectedCategories.filter((id) => id !== categoryId)
-      : [...selectedCategories, categoryId];
+      ? selectedCategories.filter((id) => id !== categoryId) // 선택 해제
+      : [...selectedCategories, categoryId]; // 선택 추가
 
     setFilters((prev) => ({
       ...prev,
       categories: newCategories,
     }));
-    applyFilters(searchQuery, newCategories);
   };
 
   const handleSearchChange = (e) => {
@@ -57,15 +51,6 @@ export const ProductFilter = ({ filters, setFilters }) => {
     setFilters((prev) => ({
       ...prev,
       searchQuery: query,
-    }));
-    applyFilters(query, selectedCategories);
-  };
-
-  const applyFilters = (query, cats) => {
-    setFilters((prev) => ({
-      ...prev,
-      searchQuery: query,
-      categories: cats,
     }));
   };
 
@@ -75,6 +60,13 @@ export const ProductFilter = ({ filters, setFilters }) => {
       searchQuery: '',
       categories: [],
     }));
+  };
+
+  const isParentCategorySelected = (parentCategory) => {
+    const subCategorieIds = parentCategory.subCategories?.map((subCat) => subCat.categoryId) || [];
+
+    if (subCategorieIds.length === 0) return false;
+    return subCategorieIds.every((subCatId) => selectedCategories.includes(subCatId));
   };
 
   const hasActiveFilters = searchQuery !== '' || selectedCategories.length > 0;
@@ -130,8 +122,8 @@ export const ProductFilter = ({ filters, setFilters }) => {
                 <div className='flex items-center gap-2'>
                   <Checkbox
                     id={`category-${category.categoryId}`}
-                    checked={selectedCategories.includes(category.categoryId)}
-                    onCheckedChange={() => handleParentCategoryToggle(category.categoryId)}
+                    checked={isParentCategorySelected(category)}
+                    onCheckedChange={() => handleParentCategoryToggle(category)}
                   />
                   <Label
                     htmlFor={`category-${category.categoryId}`}

@@ -32,9 +32,6 @@ function RouteComponent() {
       try {
         const resp = await sellerApi.getSellerInfo(sellerId);
 
-        console.log('seller response:', resp);
-        console.log('Seller Info:', resp.data);
-
         if (resp.status !== 200) {
           throw new Error('Failed to fetch seller info');
         }

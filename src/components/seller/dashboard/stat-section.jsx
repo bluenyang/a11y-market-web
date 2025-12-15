@@ -49,7 +49,6 @@ export const DashboardStatSection = () => {
     (async () => {
       try {
         const resp = await sellerApi.getDashboardStats();
-        console.log(resp.data);
         setData(resp.data);
         setSellerFormData({
           sellerName: resp.data.sellerName,

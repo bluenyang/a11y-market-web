@@ -2,6 +2,18 @@ import { orderApi } from '@/api/order-api';
 import { ImageWithFallback } from '@/components/image-with-fallback';
 import { LoadingEmpty } from '@/components/main/loading-empty';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,25 +28,10 @@ import {
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { getOrderItemStatusLabel } from '@/lib/order-status-mapping';
+import { ORDER_ITEM_STATUS, statusLabel } from '@/constants/order-item-status';
+import { orderItemStatusAlert } from '@/lib/order-Item-alert';
 import { createFileRoute } from '@tanstack/react-router';
-import {
-  ArchiveX,
-  Barcode,
-  Calendar,
-  CreditCard,
-  FileCheck,
-  Hash,
-  MessageSquareX,
-  Package,
-  PackageCheck,
-  ShoppingBag,
-  Tag,
-  TicketCheck,
-  TicketX,
-  Timer,
-  Truck,
-} from 'lucide-react';
+import { Barcode, Calendar, CreditCard, Hash, Package, ShoppingBag, Tag } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -45,16 +42,12 @@ export const Route = createFileRoute('/_need-auth/mypage/orders/$orderItemId')({
 function RouteComponent() {
   const { orderItemId } = Route.useParams();
 
-  const [order, setorder] = useState(null);
-  const [actionType, setActionType] = useState(null);
+  const [order, setOrder] = useState(null);
   const [reason, setReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [canCancel, setCanCancel] = useState(false);
   const [canRefund, setCanRefund] = useState(false);
-  const [statusInfo, setStatusInfo] = useState({
-    label: '로딩 중...',
-    color: 'bg-green-200 border-green-600 text-green-900',
-  });
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -62,8 +55,7 @@ function RouteComponent() {
         const resp = await orderApi.getMyOrderDetail(orderItemId);
 
         const order = resp.data;
-        console.log('Fetched order detail:', order);
-        setorder(order);
+        setOrder(order);
         if (
           order.orderItem.orderItemStatus === 'PAID' ||
           order.orderItem.orderItemStatus === 'ORDERED'
@@ -81,72 +73,6 @@ function RouteComponent() {
       }
     })();
   }, []);
-
-  const orderItemStatusData = {
-    ORDERD: {
-      label: '주문접수',
-      description: '주문서는 발행되었으나, 결제 대기 상태입니다.',
-      color:
-        'bg-blue-200 border-blue-600 text-blue-900 dark:bg-blue-900 dark:border-blue-400 dark:text-blue-200',
-      icon: <Timer />,
-    },
-    PAID: {
-      label: '결제완료',
-      description: '결제가 완료되어 상품 준비 중입니다.',
-      color:
-        'bg-green-200 border-green-600 text-green-900 dark:bg-green-900 dark:border-green-400 dark:text-green-200',
-      icon: <FileCheck />,
-    },
-    REJECTED: {
-      label: '주문거절',
-      description: '주문이 거절되었습니다.',
-      color:
-        'bg-red-200 border-red-600 text-red-900 dark:bg-red-900 dark:border-red-400 dark:text-red-200',
-      icon: <ArchiveX />,
-    },
-    ACCEPTED: {
-      label: '주문승인',
-      description: '배송준비 중입니다.',
-      color:
-        'bg-yellow-200 border-yellow-600 text-yellow-900 dark:bg-yellow-900 dark:border-yellow-400 dark:text-yellow-200',
-      icon: <Package />,
-    },
-    SHIPPED: {
-      label: '배송중',
-      description: '상품이 배송 중입니다.',
-      color:
-        'bg-purple-200 border-purple-600 text-purple-900 dark:bg-purple-900 dark:border-purple-400 dark:text-purple-200',
-      icon: <Truck />,
-    },
-    CONFIRMED: {
-      label: '배송완료',
-      description: '상품의 주문을 확정하였습니다.',
-      color:
-        'bg-teal-200 border-teal-600 text-teal-900 dark:bg-teal-900 dark:border-teal-400 dark:text-teal-200',
-      icon: <PackageCheck />,
-    },
-    CANCEL_PENDING: {
-      label: '취소요청',
-      description: '주문 취소 요청이 접수되었습니다.',
-      color:
-        'bg-orange-200 border-orange-600 text-orange-900 dark:bg-orange-900 dark:border-orange-400 dark:text-orange-200',
-      icon: <MessageSquareX />,
-    },
-    CANCELED: {
-      label: '주문취소',
-      description: '주문이 취소되었습니다.',
-      color:
-        'bg-neutral-200 border-neutral-600 text-neutral-900 dark:bg-neutral-700 dark:border-neutral-400 dark:text-neutral-200',
-      icon: <TicketCheck />,
-    },
-    CANCEL_REJECTED: {
-      label: '취소거절',
-      description: '주문 취소 요청이 거절되었습니다.',
-      color:
-        'bg-red-200 border-red-600 text-red-900 dark:bg-red-900 dark:border-red-400 dark:text-red-200',
-      icon: <TicketX />,
-    },
-  };
 
   const handleConfirmAction = async () => {
     setIsProcessing(true);
@@ -166,7 +92,32 @@ function RouteComponent() {
       toast.error('주문 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setIsProcessing(false);
-      setActionType(null);
+    }
+  };
+
+  const handleActionOrderItemConfirm = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setIsProcessing(true);
+
+    try {
+      await orderApi.confirmOrderItem({ orderItemId: orderItemId });
+
+      toast.success('구매 확정이 완료되었습니다.');
+      setOrder((prev) => ({
+        ...prev,
+        orderItem: {
+          ...prev.orderItem,
+          orderItemStatus: ORDER_ITEM_STATUS.CONFIRMED,
+        },
+      }));
+      setConfirmDialogOpen(false);
+    } catch (err) {
+      console.error('구매 확정 실패:', err);
+      toast.error(err.message || '구매 확정 중 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -205,14 +156,14 @@ function RouteComponent() {
       </h2>
       <article className='mb-6 space-y-6'>
         <Alert
-          className={`${orderItemStatusData[order.orderItem.orderItemStatus].color} items-center p-6 has-[>svg]:grid-cols-[calc(var(--spacing)*8)_1fr] [&>svg]:row-span-2 [&>svg]:size-8`}
+          className={`${orderItemStatusAlert[order.orderItem.orderItemStatus].color} items-center p-6 has-[>svg]:grid-cols-[calc(var(--spacing)*8)_1fr] [&>svg]:row-span-2 [&>svg]:size-8`}
         >
-          {orderItemStatusData[order.orderItem.orderItemStatus].icon}
+          {orderItemStatusAlert[order.orderItem.orderItemStatus].icon}
           <AlertTitle className='text-xl font-bold'>
-            {orderItemStatusData[order.orderItem.orderItemStatus].label}
+            {orderItemStatusAlert[order.orderItem.orderItemStatus].label}
           </AlertTitle>
           <AlertDescription className='text-base'>
-            {orderItemStatusData[order.orderItem.orderItemStatus].description}
+            {orderItemStatusAlert[order.orderItem.orderItemStatus].description}
           </AlertDescription>
         </Alert>
 
@@ -297,12 +248,9 @@ function RouteComponent() {
                 <span>주문 상태</span>
               </dt>
               <dd className='flex-1'>
-                <span
-                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm ${orderItemStatusData[order.orderItem.orderItemStatus].color}`}
-                  role='status'
-                >
-                  {getOrderItemStatusLabel(order.orderItem.orderItemStatus)}
-                </span>
+                <Badge className={statusLabel(order.orderItem.orderItemStatus).className}>
+                  {statusLabel(order.orderItem.orderItemStatus).label}
+                </Badge>
               </dd>
             </div>
           </dl>
@@ -377,6 +325,38 @@ function RouteComponent() {
             주문 관리
           </h2>
           <div className='flex flex-col gap-4 md:flex-row md:gap-6'>
+            {order.orderItem.orderItemStatus === ORDER_ITEM_STATUS.SHIPPED && (
+              <AlertDialog
+                open={confirmDialogOpen}
+                onOpenChange={setConfirmDialogOpen}
+              >
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant='default'
+                    className='w-full md:w-auto'
+                  >
+                    구매 확정하기
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>구매 확정하기</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      정말로 이 주문을 구매 확정하시겠습니까? 구매 확정 후에는 환불이 불가능합니다.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>취소</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleActionOrderItemConfirm}
+                      disabled={isProcessing}
+                    >
+                      구매 확정
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
             <Dialog>
               <form>
                 <DialogTrigger asChild>

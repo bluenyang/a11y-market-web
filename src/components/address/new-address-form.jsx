@@ -10,7 +10,13 @@ import { useEffect, useState } from 'react';
 import DaumPostcodeEmbed from 'react-daum-postcode';
 import { toast } from 'sonner';
 
-export const NewAddressForm = ({ mode, initialForm = null, onSave, onCancel }) => {
+export const NewAddressForm = ({
+  mode,
+  initialForm = null,
+  onSave,
+  onCancel,
+  isDefault = false,
+}) => {
   const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
   const [formattedPhone, setFormattedPhone] = useState('');
   const [formData, setFormData] = useState({
@@ -20,7 +26,7 @@ export const NewAddressForm = ({ mode, initialForm = null, onSave, onCancel }) =
     receiverZipcode: '',
     receiverAddr1: '',
     receiverAddr2: '',
-    isDefault: false,
+    isDefault: isDefault,
   });
 
   useEffect(() => {
@@ -67,20 +73,22 @@ export const NewAddressForm = ({ mode, initialForm = null, onSave, onCancel }) =
   const formatPhoneNumber = (value) => {
     if (!value) return '';
     const input = value.replace(/[^0-9]/g, '');
-    if (input.length <= 3) {
-      return input;
-    } else if (input.length <= 7) {
-      return `${input.slice(0, 3)}-${input.slice(3)}`;
-    } else if (input.length <= 10) {
-      return `${input.slice(0, 3)}-${input.slice(3, 6)}-${input.slice(6)}`;
-    } else {
-      return `${input.slice(0, 3)}-${input.slice(3, 7)}-${input.slice(7)}`;
+    setFormData((prev) => ({ ...prev, receiverPhone: input }));
+
+    let formattedValue = value;
+    if (input.length > 3 && input.length <= 7) {
+      formattedValue = `${input.slice(0, 3)}-${input.slice(3)}`;
+    } else if (input.length === 10) {
+      formattedValue = `${input.slice(0, 3)}-${input.slice(3, 6)}-${input.slice(6)}`;
+    } else if (input.length > 7) {
+      formattedValue = `${input.slice(0, 3)}-${input.slice(3, 7)}-${input.slice(7)}`;
     }
+
+    return formattedValue;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitting form data:', formData);
     try {
       if (mode === 'add') {
         await addressApi.createAddress(formData);
@@ -88,7 +96,7 @@ export const NewAddressForm = ({ mode, initialForm = null, onSave, onCancel }) =
         await addressApi.updateAddress(formData.addressId, formData);
       }
       toast.success('배송지를 저장했습니다.');
-      onSave();
+      onSave && onSave();
     } catch (err) {
       console.error('배송지 저장 실패:', err);
       toast.error(err.message || '배송지 저장에 실패했습니다.');
@@ -135,6 +143,7 @@ export const NewAddressForm = ({ mode, initialForm = null, onSave, onCancel }) =
                     onCheckedChange={(value) =>
                       setFormData((prev) => ({ ...prev, isDefault: value }))
                     }
+                    disabled={mode === 'add' && isDefault}
                   />
                   <Label
                     htmlFor='isDefault'
@@ -173,9 +182,9 @@ export const NewAddressForm = ({ mode, initialForm = null, onSave, onCancel }) =
                 placeholder='받는 분 전화번호를 입력하세요'
                 maxLength={15}
                 value={formattedPhone}
-                onChange={(value) => {
-                  setFormData((prev) => ({ ...prev, receiverPhone: value.target.value }));
-                  setFormattedPhone(formatPhoneNumber(value.target.value));
+                onChange={(e) => {
+                  // setFormData((prev) => ({ ...prev, receiverPhone: value.target.value }));
+                  setFormattedPhone(formatPhoneNumber(e.target.value));
                 }}
                 required
               />
@@ -220,7 +229,7 @@ export const NewAddressForm = ({ mode, initialForm = null, onSave, onCancel }) =
               <Input
                 id='receiverAddr2'
                 placeholder='상세주소를 입력하세요'
-                value={formData.receiverAddr2}
+                value={formData.receiverAddr2 || ''}
                 onChange={(value) =>
                   setFormData((prev) => ({ ...prev, receiverAddr2: value.target.value }))
                 }

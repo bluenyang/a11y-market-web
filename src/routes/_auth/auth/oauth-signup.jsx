@@ -134,7 +134,6 @@ function RouteComponent() {
         return false;
       }
     } else if (currentFocusId === 'userPhone') {
-      console.log('Checking phone:', data);
       try {
         const resp = await authApi.checkPhoneExists(data);
 

@@ -128,8 +128,6 @@ function RouteComponent() {
             onChange={(e) => {
               const query = e.target.value.toLowerCase();
 
-              console.log('Search query:', query);
-
               setSellers(
                 sellerData.filter(
                   (seller) =>

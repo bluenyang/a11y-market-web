@@ -23,26 +23,16 @@ export const AddressManager = () => {
     }
   };
 
-  const handleSave = async (form) => {
+  const handleSave = async () => {
     try {
-      let response;
-      if (form.addressId) {
-        response = await addressApi.updateAddress(form.addressId, form);
-      } else {
-        response = await addressApi.createAddress(form);
-      }
-      const updated = response.data;
-      setAddresses((prev) => {
-        const exists = prev.find((a) => a.addressId === updated.addressId);
-        if (exists) {
-          return prev.map((a) => (a.addressId === updated.addressId ? updated : a));
-        }
-        return [...prev, updated];
-      });
+      const resp = await addressApi.getAddressList();
+      const updated = resp.data;
+
+      setAddresses(updated);
       setEditingAddress(null);
-      toast.success('배송지를 저장했습니다.');
     } catch (err) {
-      toast.message('배송지 저장을 실패했습니다.');
+      console.error(err);
+      toast.error(err.message || '배송지 목록을 불러오는데 실패했습니다.');
     }
   };
 
@@ -101,7 +91,10 @@ export const AddressManager = () => {
           {/* 기본배송지 */}
           <TabsContent value='default'>
             {editingAddress?.addressId === defaultAddr?.addressId ? (
-              <NewAddressForm mode='add' />
+              <NewAddressForm
+                mode='add'
+                isDefault={true}
+              />
             ) : (
               <DefaultAddress
                 defaultAddress={defaultAddr}

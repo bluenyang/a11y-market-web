@@ -22,7 +22,6 @@ function RouteComponent() {
     if (accessToken) {
       try {
         const resp = await authApi.getUserInfo(accessToken);
-        console.log(resp);
         const { user, newAccessToken, refreshToken } = resp.data;
 
         dispatch(loginSuccess({ user, accessToken: newAccessToken, refreshToken }));

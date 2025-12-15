@@ -40,15 +40,18 @@ export const AddressModifier = ({ mode, onChange, className = '', variant = 'out
   const formatPhoneNumber = (value) => {
     if (!value) return '';
     const input = value.replace(/[^0-9]/g, '');
-    if (input.length <= 3) {
-      return input;
-    } else if (input.length <= 7) {
-      return `${input.slice(0, 3)}-${input.slice(3)}`;
-    } else if (input.length <= 10) {
-      return `${input.slice(0, 3)}-${input.slice(3, 6)}-${input.slice(6)}`;
-    } else {
-      return `${input.slice(0, 3)}-${input.slice(3, 7)}-${input.slice(7)}`;
+    setFormData((prev) => ({ ...prev, receiverPhone: input }));
+
+    let formattedValue = value;
+    if (input.length > 3 && input.length <= 7) {
+      formattedValue = `${input.slice(0, 3)}-${input.slice(3)}`;
+    } else if (input.length === 10) {
+      formattedValue = `${input.slice(0, 3)}-${input.slice(3, 6)}-${input.slice(6)}`;
+    } else if (input.length > 7) {
+      formattedValue = `${input.slice(0, 3)}-${input.slice(3, 7)}-${input.slice(7)}`;
     }
+
+    return formattedValue;
   };
 
   const handleOnComplete = (data) => {
@@ -75,6 +78,7 @@ export const AddressModifier = ({ mode, onChange, className = '', variant = 'out
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       if (mode === 'add') {
         await addressApi.createAddress(formData);
@@ -82,7 +86,7 @@ export const AddressModifier = ({ mode, onChange, className = '', variant = 'out
         await addressApi.updateAddress(formData);
       }
 
-      onChange();
+      onChange && onChange();
       setIsModifierDialogOpen(false);
       toast.success('배송지를 저장했습니다.');
     } catch (err) {
@@ -160,8 +164,8 @@ export const AddressModifier = ({ mode, onChange, className = '', variant = 'out
                         id='addressName'
                         placeholder='주소명을 입력하세요'
                         value={formData.addressName}
-                        onChange={(value) =>
-                          setFormData((prev) => ({ ...prev, addressName: value.target.value }))
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, addressName: e.target.value }))
                         }
                         required
                       />
@@ -173,8 +177,8 @@ export const AddressModifier = ({ mode, onChange, className = '', variant = 'out
                       id='receiverName'
                       placeholder='받는 분 이름을 입력하세요'
                       value={formData.receiverName}
-                      onChange={(value) =>
-                        setFormData((prev) => ({ ...prev, receiverName: value.target.value }))
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, receiverName: e.target.value }))
                       }
                       required
                     />
@@ -186,9 +190,9 @@ export const AddressModifier = ({ mode, onChange, className = '', variant = 'out
                       placeholder='받는 분 전화번호를 입력하세요'
                       maxLength={15}
                       value={formattedPhone}
-                      onChange={(value) => {
-                        setFormData((prev) => ({ ...prev, receiverPhone: value.target.value }));
-                        setFormattedPhone(formatPhoneNumber(value.target.value));
+                      onChange={(e) => {
+                        const formatted = formatPhoneNumber(e.target.value);
+                        setFormattedPhone(formatted);
                       }}
                       required
                     />
@@ -200,8 +204,8 @@ export const AddressModifier = ({ mode, onChange, className = '', variant = 'out
                         id='receiverZipcode'
                         placeholder='우편번호'
                         value={formData.receiverZipcode}
-                        onChange={(value) =>
-                          setFormData((prev) => ({ ...prev, receiverZipcode: value.target.value }))
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, receiverZipcode: e.target.value }))
                         }
                         readOnly
                         required
@@ -221,8 +225,8 @@ export const AddressModifier = ({ mode, onChange, className = '', variant = 'out
                       id='receiverAddr1'
                       placeholder='주소를 입력하세요'
                       value={formData.receiverAddr1}
-                      onChange={(value) =>
-                        setFormData((prev) => ({ ...prev, receiverAddr1: value.target.value }))
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, receiverAddr1: e.target.value }))
                       }
                       readOnly
                       required
@@ -234,8 +238,8 @@ export const AddressModifier = ({ mode, onChange, className = '', variant = 'out
                       id='receiverAddr2'
                       placeholder='상세주소를 입력하세요'
                       value={formData.receiverAddr2}
-                      onChange={(value) =>
-                        setFormData((prev) => ({ ...prev, receiverAddr2: value.target.value }))
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, receiverAddr2: e.target.value }))
                       }
                       required
                     />

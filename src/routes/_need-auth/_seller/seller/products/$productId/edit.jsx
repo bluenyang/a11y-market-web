@@ -165,7 +165,7 @@ function SellerProductEditPage() {
       toast.error('폼에 오류가 있습니다. 수정 후 다시 시도해주세요.');
       setIsSubmitting(false);
 
-      console.log('Validation errors:', errors);
+      console.error('Validation errors:', errors);
       return;
     }
 

@@ -43,7 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { getOrderItemStatusLabel, getOrderItemStatusStyle } from '@/lib/order-status-mapping';
+import { statusLabel } from '@/constants/order-item-status';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ClipboardClock } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -72,9 +72,6 @@ function SellerOrdersPage() {
           statusFilter === 'all' ? null : statusFilter,
         );
         const { orderItems, totalOrderCount } = data;
-
-        console.log('Fetched received orders:', orderItems);
-        console.log('Total order count:', totalOrderCount);
 
         setTotalOrderCount(totalOrderCount);
         setOrderData(orderItems);
@@ -110,6 +107,10 @@ function SellerOrdersPage() {
       console.error('Failed to update order item status:', error);
       toast.error(error.message || '주문 상태 업데이트에 실패했습니다.');
     }
+  };
+
+  const getBadge = (status) => {
+    return <Badge className={statusLabel(status).className}>{statusLabel(status).label}</Badge>;
   };
 
   return (
@@ -193,28 +194,19 @@ function SellerOrdersPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value='all'>전체</SelectItem>
-                    <SelectItem value='ORDERED'>{getOrderItemStatusLabel('ORDERED')}</SelectItem>
-                    <SelectItem value='PAID'>{getOrderItemStatusLabel('PAID')}</SelectItem>
-                    <SelectItem value='REJECTED'>{getOrderItemStatusLabel('REJECTED')}</SelectItem>
-                    <SelectItem value='ACCEPTED'>{getOrderItemStatusLabel('ACCEPTED')}</SelectItem>
-                    <SelectItem value='SHIPPED'>{getOrderItemStatusLabel('SHIPPED')}</SelectItem>
-                    <SelectItem value='CONFIRMED'>
-                      {getOrderItemStatusLabel('CONFIRMED')}
-                    </SelectItem>
-                    <SelectItem value='CANCEL_PENDING'>
-                      {getOrderItemStatusLabel('CANCEL_PENDING')}
-                    </SelectItem>
-                    <SelectItem value='CANCELED'>{getOrderItemStatusLabel('CANCELED')}</SelectItem>
-                    <SelectItem value='CANCEL_REJECTED'>
-                      {getOrderItemStatusLabel('CANCEL_REJECTED')}
-                    </SelectItem>
-                    <SelectItem value='RETURN_PENDING'>
-                      {getOrderItemStatusLabel('RETURN_PENDING')}
-                    </SelectItem>
-                    <SelectItem value='RETURNED'>{getOrderItemStatusLabel('RETURNED')}</SelectItem>
-                    <SelectItem value='RETURN_REJECTED'>
-                      {getOrderItemStatusLabel('RETURN_REJECTED')}
-                    </SelectItem>
+                    <SelectItem value='ORDERED'>{getBadge('ORDERED')}</SelectItem>
+                    <SelectItem value='PAID'>{getBadge('PAID')}</SelectItem>
+                    <SelectItem value='REJECTED'>{getBadge('REJECTED')}</SelectItem>
+                    <SelectItem value='ACCEPTED'>{getBadge('ACCEPTED')}</SelectItem>
+                    <SelectItem value='SHIPPING'>{getBadge('SHIPPING')}</SelectItem>
+                    <SelectItem value='SHIPPED'>{getBadge('SHIPPED')}</SelectItem>
+                    <SelectItem value='CONFIRMED'>{getBadge('CONFIRMED')}</SelectItem>
+                    <SelectItem value='CANCEL_PENDING'>{getBadge('CANCEL_PENDING')}</SelectItem>
+                    <SelectItem value='CANCELED'>{getBadge('CANCELED')}</SelectItem>
+                    <SelectItem value='CANCEL_REJECTED'>{getBadge('CANCEL_REJECTED')}</SelectItem>
+                    <SelectItem value='RETURN_PENDING'>{getBadge('RETURN_PENDING')}</SelectItem>
+                    <SelectItem value='RETURNED'>{getBadge('RETURNED')}</SelectItem>
+                    <SelectItem value='RETURN_REJECTED'>{getBadge('RETURN_REJECTED')}</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>
@@ -363,51 +355,52 @@ function SellerOrdersPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {orderData.map((o) => (
-                      <TableRow
-                        key={o.orderItemId}
-                        className={`border-t ${
-                          o.orderItemId === selectedOrder?.orderItemId
-                            ? 'bg-amber-100 hover:bg-amber-200 dark:bg-amber-900 dark:hover:bg-amber-800'
-                            : ''
-                        }`}
-                      >
-                        <TableCell className='px-4 py-2 align-middle text-blue-600 md:text-xs dark:text-blue-300'>
-                          {o.orderItemId}
-                        </TableCell>
-                        <TableCell className='px-4 py-2 text-center align-middle md:text-xs'>
-                          {new Date(o.orderedAt)?.toLocaleDateString('ko-KR')}
-                        </TableCell>
-                        <TableCell className='px-4 py-2 text-center align-middle md:text-xs'>
-                          {o.buyerName}
-                        </TableCell>
-                        <TableCell className='truncate px-4 py-2 align-middle md:max-w-[260px]'>
-                          {o.productName}
-                        </TableCell>
-                        <TableCell className='truncate px-4 py-2 text-center align-middle'>
-                          {o.productQuantity}
-                        </TableCell>
-                        <TableCell className='px-4 py-2 text-center align-middle md:text-xs'>
-                          ₩{(o.productPrice * o.productQuantity)?.toLocaleString('ko-KR')}
-                        </TableCell>
-                        <TableCell className='px-4 py-2 text-center align-middle'>
-                          <Badge className={getOrderItemStatusStyle(o.orderItemStatus)}>
-                            {getOrderItemStatusLabel(o.orderItemStatus)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className='px-4 py-2 text-center align-middle'>
-                          <Button
-                            size='xs'
-                            variant='outline'
-                            className='h-7 rounded-md px-3'
-                            type='button'
-                            onClick={() => setSelectedOrder(o)}
-                          >
-                            상세
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {orderData.map((o) => {
+                      const badge = statusLabel(o.orderItemStatus);
+                      return (
+                        <TableRow
+                          key={o.orderItemId}
+                          className={`border-t ${
+                            o.orderItemId === selectedOrder?.orderItemId
+                              ? 'bg-amber-100 hover:bg-amber-200 dark:bg-amber-900 dark:hover:bg-amber-800'
+                              : ''
+                          }`}
+                        >
+                          <TableCell className='px-4 py-2 align-middle text-blue-600 md:text-xs dark:text-blue-300'>
+                            {o.orderItemId}
+                          </TableCell>
+                          <TableCell className='px-4 py-2 text-center align-middle md:text-xs'>
+                            {new Date(o.orderedAt)?.toLocaleDateString('ko-KR')}
+                          </TableCell>
+                          <TableCell className='px-4 py-2 text-center align-middle md:text-xs'>
+                            {o.buyerName}
+                          </TableCell>
+                          <TableCell className='truncate px-4 py-2 align-middle md:max-w-[260px]'>
+                            {o.productName}
+                          </TableCell>
+                          <TableCell className='truncate px-4 py-2 text-center align-middle'>
+                            {o.productQuantity}
+                          </TableCell>
+                          <TableCell className='px-4 py-2 text-center align-middle md:text-xs'>
+                            ₩{(o.productPrice * o.productQuantity)?.toLocaleString('ko-KR')}
+                          </TableCell>
+                          <TableCell className='px-4 py-2 text-center align-middle'>
+                            <Badge className={badge.className}>{badge.label}</Badge>
+                          </TableCell>
+                          <TableCell className='px-4 py-2 text-center align-middle'>
+                            <Button
+                              size='xs'
+                              variant='outline'
+                              className='h-7 rounded-md px-3'
+                              type='button'
+                              onClick={() => setSelectedOrder(o)}
+                            >
+                              상세
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </>
@@ -510,8 +503,8 @@ function SellerOrdersPage() {
                       주문의 진행 상황을 확인하고 우측에서 배송 상태를 변경할 수 있습니다.
                     </p>
                   </div>
-                  <Badge className={getOrderItemStatusStyle(selectedOrder?.orderItemStatus)}>
-                    {getOrderItemStatusLabel(selectedOrder?.orderItemStatus)}
+                  <Badge className={statusLabel(selectedOrder?.orderItemStatus).className}>
+                    {statusLabel(selectedOrder?.orderItemStatus).label}
                   </Badge>
                 </div>
               </CardContent>
@@ -561,44 +554,35 @@ function SellerOrdersPage() {
                             value='ORDERED'
                             disabled
                           >
-                            {getOrderItemStatusLabel('ORDERED')}
+                            {getBadge('ORDERED')}
                           </SelectItem>
-                          <SelectItem value='PAID'>{getOrderItemStatusLabel('PAID')}</SelectItem>
-                          <SelectItem value='REJECTED'>
-                            {getOrderItemStatusLabel('REJECTED')}
-                          </SelectItem>
-                          <SelectItem value='ACCEPTED'>
-                            {getOrderItemStatusLabel('ACCEPTED')}
-                          </SelectItem>
-                          <SelectItem value='SHIPPED'>
-                            {getOrderItemStatusLabel('SHIPPED')}
-                          </SelectItem>
+                          <SelectItem value='PAID'>{getBadge('PAID')}</SelectItem>
+                          <SelectItem value='REJECTED'>{getBadge('REJECTED')}</SelectItem>
+                          <SelectItem value='ACCEPTED'>{getBadge('ACCEPTED')}</SelectItem>
+                          <SelectItem value='SHIPPING'>{getBadge('SHIPPING')}</SelectItem>
+                          <SelectItem value='SHIPPED'>{getBadge('SHIPPED')}</SelectItem>
                           <SelectItem
                             value='CONFIRMED'
                             disabled
                           >
-                            {getOrderItemStatusLabel('CONFIRMED')}
+                            {getBadge('CONFIRMED')}
                           </SelectItem>
                           <SelectItem
                             value='CANCEL_PENDING'
                             disabled
                           >
-                            {getOrderItemStatusLabel('CANCEL_PENDING')}
+                            {getBadge('CANCEL_PENDING')}
                           </SelectItem>
-                          <SelectItem value='CANCELED'>
-                            {getOrderItemStatusLabel('CANCELED')}
-                          </SelectItem>
+                          <SelectItem value='CANCELED'>{getBadge('CANCELED')}</SelectItem>
                           <SelectItem value='CANCEL_REJECTED'>
-                            {getOrderItemStatusLabel('CANCEL_REJECTED')}
+                            {getBadge('CANCEL_REJECTED')}
                           </SelectItem>
                           <SelectItem value='RETURN_PENDING'>
-                            {getOrderItemStatusLabel('RETURN_PENDING')}
+                            {getBadge('RETURN_PENDING')}
                           </SelectItem>
-                          <SelectItem value='RETURNED'>
-                            {getOrderItemStatusLabel('RETURNED')}
-                          </SelectItem>
+                          <SelectItem value='RETURNED'>{getBadge('RETURNED')}</SelectItem>
                           <SelectItem value='RETURN_REJECTED'>
-                            {getOrderItemStatusLabel('RETURN_REJECTED')}
+                            {getBadge('RETURN_REJECTED')}
                           </SelectItem>
                         </SelectContent>
                       </Select>

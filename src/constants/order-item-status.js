@@ -3,6 +3,7 @@ export const ORDER_ITEM_STATUS = {
   PAID: 'PAID',
   REJECTED: 'REJECTED',
   ACCEPTED: 'ACCEPTED',
+  SHPPING: 'SHIPPING',
   SHIPPED: 'SHIPPED',
   CONFIRMED: 'CONFIRMED',
   CANCEL_PENDING: 'CANCEL_PENDING',
@@ -35,24 +36,29 @@ export const statusLabel = (status) => {
         className: 'bg-purple-500',
         label: '주문 승인',
       };
-    case ORDER_ITEM_STATUS.SHIPPED:
+    case ORDER_ITEM_STATUS.SHPPING:
       return {
         className: 'bg-yellow-500',
         label: '배송 중',
       };
+    case ORDER_ITEM_STATUS.SHIPPED:
+      return {
+        className: 'bg-indigo-500',
+        label: '배송 완료',
+      };
     case ORDER_ITEM_STATUS.CONFIRMED:
       return {
-        className: 'bg-green-700',
-        label: '배송 완료',
+        className: 'bg-teal-700',
+        label: '구매 확정',
       };
     case ORDER_ITEM_STATUS.CANCEL_PENDING:
       return {
-        className: 'bg-yellow-700',
+        className: 'bg-orange-700',
         label: '취소 요청 중',
       };
     case ORDER_ITEM_STATUS.CANCELED:
       return {
-        className: 'bg-red-500',
+        className: 'bg-neutral-500',
         label: '주문 취소',
       };
     case ORDER_ITEM_STATUS.CANCEL_REJECTED:

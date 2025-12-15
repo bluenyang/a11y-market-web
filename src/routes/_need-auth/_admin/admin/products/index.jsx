@@ -198,7 +198,7 @@ function RouteComponent() {
             {productData.map((product) => (
               <TableRow key={product.productId}>
                 <TableCell className='pl-8'>{product.productId}</TableCell>
-                <TableCell>{product.productName}</TableCell>
+                <TableCell className='max-w-0 truncate'>{product.productName}</TableCell>
                 <TableCell className='text-center'>
                   {product.productPrice?.toLocaleString('ko-KR')}원
                 </TableCell>

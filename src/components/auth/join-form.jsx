@@ -63,7 +63,6 @@ export const JoinForm = ({
     setErrors((prev) => ({ ...prev, [currentField.id]: null }));
 
     if (currentField.id === 'userPass') {
-      console.log('Validating password confirmation');
       const confirmError = validateField(
         `${currentField.id}Confirm`,
         formData[`${currentField.id}Confirm`],
@@ -361,11 +360,16 @@ export const JoinForm = ({
                 className='list-disc space-y-2 pl-5'
                 aria-live='polite'
               >
-                {steps.map((step) => (
-                  <li key={step.id}>
-                    <strong>{step.label}:</strong> {formData[step.id]}
-                  </li>
-                ))}
+                {steps.map((step) => {
+                  if (step.id === 'userPass' || step.id === 'userPassConfirm') {
+                    return null;
+                  }
+                  return (
+                    <li key={step.id}>
+                      <strong>{step.label}:</strong> {formData[step.id]}
+                    </li>
+                  );
+                })}
               </ul>
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -25,7 +25,6 @@ import { Icon } from '@iconify/react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AlertCircleIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_need-auth/cart/')({
@@ -41,18 +40,6 @@ function CartPage() {
   const [err, setErr] = useState(null);
 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const stored = localStorage.getItem('selectedItems');
-    if (stored) {
-      setSelectedItems(new Set(JSON.parse(stored)));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('selectedItems', JSON.stringify(Array.from(selectedItems)));
-  }, [selectedItems]);
 
   useEffect(() => {
     const fetchCartData = async () => {

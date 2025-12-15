@@ -66,4 +66,7 @@ export const orderApi = {
   createOrder: async (data) => await axiosInstance.post('/v1/orders', data),
 
   verifyPayment: async (data) => await axiosInstance.post(`/v1/payments/verify`, data),
+
+  confirmOrderItem: async (data) =>
+    await axiosInstance.post(`/v1/users/me/orders/items/confirm`, data),
 };

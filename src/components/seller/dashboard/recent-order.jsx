@@ -9,7 +9,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import { getOrderItemStatusLabel, getOrderItemStatusStyle } from '@/lib/order-status-mapping';
+import { statusLabel } from '@/constants/order-item-status';
 import { Link } from '@tanstack/react-router';
 import { ClipboardClock } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -62,27 +62,30 @@ export const DashboardRecentOrder = () => {
           </Empty>
         ) : (
           <>
-            {data.map((order) => (
-              <div
-                key={order.itemId}
-                className='flex items-center justify-between border-b py-3 last:border-none'
-              >
-                <div>
-                  <p className='text-sm font-medium'>{order.product}</p>
-                  <p className='text-muted-foreground text-xs'>주문번호: {order.id}</p>
-                </div>
+            {data.map((order) => {
+              const badge = statusLabel(order.status);
+              return (
+                <div
+                  key={order.itemId}
+                  className='flex items-center justify-between border-b py-3 last:border-none'
+                >
+                  <div>
+                    <p className='text-sm font-medium'>{order.product}</p>
+                    <p className='text-muted-foreground text-xs'>주문번호: {order.id}</p>
+                  </div>
 
-                <div className='text-right'>
-                  <p className='font-medium'>{format(order.price)}원</p>
-                  <Badge
-                    variant='secondary'
-                    className={`mt-1 ${getOrderItemStatusStyle(order.status)}`}
-                  >
-                    {getOrderItemStatusLabel(order.status)}
-                  </Badge>
+                  <div className='text-right'>
+                    <p className='font-medium'>{format(order.price)}원</p>
+                    <Badge
+                      variant='secondary'
+                      className={`mt-1 ${badge.className}`}
+                    >
+                      {badge.label}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <div className='mt-4 text-right'>
               <Button
