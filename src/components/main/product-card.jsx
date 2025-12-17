@@ -7,10 +7,8 @@ export const ProductCard = ({ product }) => {
   const formattedPrice = product.productPrice.toLocaleString('ko-KR');
 
   const getImageUrl = () => {
-    console.log('Product images:', product.productImages);
     if (product.productImages && product.productImages.length > 0) {
-      console.log('Using productImages for image URL');
-      return product.productImages[0].imageUrl;
+      return product.productImages.filter((img) => img.imageSequence === 0)[0]?.imageUrl || '';
     } else if (product.productImageUrl) {
       return product.productImageUrl;
     } else {

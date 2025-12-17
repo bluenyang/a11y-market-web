@@ -84,7 +84,6 @@ function SellerOrdersPage() {
         setOrderData(orderItems);
 
         const summaryResp = await sellerApi.getOrderSummary();
-        console.log('Order Summary:', summaryResp.data);
         setOrderSummary((prev) => ({ ...prev, ...summaryResp.data }));
       } catch (err) {
         console.error('Failed to fetch received orders:', err);
