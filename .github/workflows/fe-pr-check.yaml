@@ -21,7 +21,7 @@ concurrency:
 
 env:
   # GitHub Container Registry
-  IMAGE_NAME: ghcr.io/${{ secrets.GHCR_USER }}/${{ github.event.repository.name }}
+  IMAGE_NAME: ghcr.io/gamesung-coding/${{ github.event.repository.name }}
 
 jobs:
   pre-comment:
@@ -61,7 +61,7 @@ jobs:
           cache: 'npm'
 
       - name: Create .env file
-        run: echo "${{ secrets.FE_ENV_PR }}" > .env
+        run: echo "${{ secrets.ENV_PR }}" > .env
 
       - name: Set dynamic variables
         id: vars
@@ -82,7 +82,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ secrets.GHCR_USER }}
+          username: gamesung-coding
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and Push docker image
@@ -105,7 +105,7 @@ jobs:
       PR_NUMBER: ${{ needs.build-and-push.outputs.pr_number }}
       TEAM_USER: ${{ secrets.TEAM_USER }}
       TEAM_PASS: ${{ secrets.TEAM_PASS }}
-      ENVIRONMENT_FILE: ${{ secrets.FE_ENV_PR }}
+      ENVIRONMENT_FILE: ${{ secrets.ENV_PR }}
 
     steps:
       - name: Checkout code
@@ -154,7 +154,7 @@ jobs:
 
           # login ghcr
           echo "[LOG] log-in Github container registry"
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "gamesung-coding" --password-stdin
 
           # pull docker image
           echo "[LOG] pull docker image"

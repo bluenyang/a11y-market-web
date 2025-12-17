@@ -1,0 +1,20 @@
+services:
+  webapp:
+    image: ghcr.io/gamesung-coding/a11y-market-web:latest
+    container_name: a11ymarket-web
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      # Traefik setting
+      - 'traefik.enable=true'
+      # Router setting
+      - 'traefik.http.routers.a11ymarket-web.rule=Host(`${HOST_NAME}`)'
+      - 'traefik.http.routers.a11ymarket-web.entrypoints=websecure'
+      - 'traefik.http.routers.a11ymarket-web.tls=true'
+      # Service Setting
+      - 'traefik.http.services.a11ymarket-web.loadbalancer.server.port=80'
+
+networks:
+  proxy:
+    external: true

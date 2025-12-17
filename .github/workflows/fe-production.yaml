@@ -2,8 +2,6 @@ name: FE | Production - Build and Deploy
 
 on:
   push:
-    branches:
-      - master
     tags:
       - 'v*.*.*'
   workflow_dispatch:
@@ -14,8 +12,8 @@ concurrency:
 
 env:
   # GitHub Container Registry
-  IMAGE_NAME: ghcr.io/${{ secrets.GHCR_USER }}/${{ github.event.repository.name }}
-  IMAGE_TAG: ghcr.io/${{ secrets.GHCR_USER }}/${{ github.event.repository.name }}:${{ github.ref_name }}
+  IMAGE_NAME: ghcr.io/gamesung-coding/a11y-market-web
+  IMAGE_TAG: ghcr.io/gamesung-coding/a11y-market-web:latest
   SERVICE_NAME: fe-production
   DEPLOY_PATH: ${{ secrets.AWS_DOCKER_DIR }}/deployments/fe-production
 
@@ -44,7 +42,7 @@ jobs:
           cache: 'npm'
 
       - name: Create .env file
-        run: echo "${{ secrets.FE_ENV_PRODUCTION }}" > .env
+        run: echo "${{ secrets.ENV_PRODUCTION }}" > .env
 
       - name: Install dependencies
         run: npm ci
@@ -59,7 +57,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ secrets.GHCR_USER }}
+          username: gamesung-coding
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and Push docker image
@@ -79,10 +77,7 @@ jobs:
 
     # Set output and secrets received through needs as global variables
     env:
-      TEAM_USER: ${{ secrets.TEAM_USER }}
-      TEAM_PASS: ${{ secrets.TEAM_PASS }}
-      ENVIRONMENT_FILE: ${{ secrets.FE_ENV_PRODUCTION }}
-      HOST_NAME: ${{ secrets.PRODUCTION_DOMAIN }}
+      DOCKER_ENV_FILE: ${{ secrets.DOCKER_ENV_PRODUCTION }}
 
     steps:
       - name: Checkout code
@@ -92,39 +87,24 @@ jobs:
         run: |
           echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
 
-      - name: Create compose file from template
-        run: |
-          # Use envsubst to replace template variables with real values
-          # Store result into COMPOSE_CONTENT
-          export COMPOSE_CONTENT=$(envsubst < .docker/docker-compose.template.yaml)
-
-          # Securely forward multi-linear variables to SSH with GitHub Actions masking capabilities
-          echo "COMPOSE_CONTENT<<EOF" >> $GITHUB_ENV
-          echo "$COMPOSE_CONTENT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
       - name: Deploy to server
         run: |
-          mkdir -p ${{ secrets.AWS_DOCKER_DIR }}/deployments/fe-production
+          mkdir -p ${{ env.DEPLOY_PATH }}
 
           # write compose file from runner
-          echo "[LOG] build compose file ..."
-          cat <<'EOF' > ${{ secrets.AWS_DOCKER_DIR }}/deployments/fe-production/docker-compose.yaml
-          ${{ env.COMPOSE_CONTENT }}
-          EOF
+          echo "[LOG] copy docker-compose file ..."
+          cp .docker/docker-compose.production.yaml ${{ env.DEPLOY_PATH }}/docker-compose.yaml
 
-          # Write application.yaml
-          echo "[LOG] build application.yaml ..."
-          cat <<'EOF' > ${{ secrets.AWS_DOCKER_DIR }}/deployments/fe-production/.env
-          ${{ env.ENVIRONMENT_FILE }}
-          EOF
+          # Write .env file to deploy path
+          echo "[LOG] creating .env file ..."
+          echo "${{ env.DOCKER_ENV_FILE }}" > "${{ env.DEPLOY_PATH }}/.env"
 
           # change dir into deploy path
-          cd ${{ secrets.AWS_DOCKER_DIR }}/deployments/fe-production
+          cd ${{ env.DEPLOY_PATH }}
 
           # login ghcr
           echo "[LOG] log-in Github container registry"
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "gamesung-coding" --password-stdin
 
           # pull docker image
           echo "[LOG] pull docker image"
