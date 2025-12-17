@@ -228,6 +228,26 @@ html.a11y-contrast-invert {
   background-color: oklch(1 0 0);
 }
 
+html.a11y-smart-contrast {
+  /* 배경과 글자 색상 차이에 따라 자동으로 고대비/저대비 적용 */
+  filter: invert(1) hue-rotate(180deg) contrast(1.2) !important;
+}
+
+/* 이미지/비디오/아이콘 등은 반전 제외 (이중 반전으로 원상 복구) */
+html.a11y-smart-contrast img,
+html.a11y-smart-contrast video,
+html.a11y-smart-contrast iframe,
+html.a11y-smart-contrast .no-invert {
+  /* 배경이미지가 있는 div 등을 위한 no-invert 클래스 */
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* (선택사항) 그림자 제거: 반전 모드에서는 그림자가 어색하게 보일 수 있음 */
+html.a11y-smart-contrast * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
 /* 글자 크기 */
 html.a11y-text-size-1 {
   font-size: 112.5%;
@@ -273,9 +293,35 @@ html.a11y-link-highlight a {
 }
 
 /* 커서 강조 */
+/* 노란 원과 빨간 십자선 커서 */
+/* 누를 수 있는 부분에서는 파란색으로 변경 */
 html.a11y-cursor-highlight,
 html.a11y-cursor-highlight * {
+  /* SVG: 32x32 캔버스, 노란색 반투명 원, 빨간색 십자선 */
   cursor:
-    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewport="0 0 48 48" style="fill:black;stroke:white;stroke-width:2px;"><circle cx="24" cy="24" r="10" opacity="0.7" fill="%23ffff00" /><path d="M10,10 L30,30 M30,10 L10,30" stroke="%23ff0000" stroke-width="3" /></svg>'),
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="yellow" opacity="0.5"/><line x1="32" y1="0" x2="32" y2="64" stroke="red" stroke-width="4"/><line x1="0" y1="32" x2="64" y2="32" stroke="red" stroke-width="4"/></svg>')
+      32 32,
     auto !important;
+}
+
+/* 클릭 가능한 요소: 파란 원 + 빨간 십자선 */
+html.a11y-cursor-highlight a,
+html.a11y-cursor-highlight a *,
+html.a11y-cursor-highlight button,
+html.a11y-cursor-highlight button *,
+html.a11y-cursor-highlight [role='button'],
+html.a11y-cursor-highlight [role='button'] *,
+html.a11y-cursor-highlight input,
+html.a11y-cursor-highlight input *,
+html.a11y-cursor-highlight select,
+html.a11y-cursor-highlight select *,
+html.a11y-cursor-highlight textarea,
+html.a11y-cursor-highlight textarea *,
+html.a11y-cursor-highlight summary,
+html.a11y-cursor-highlight summary * {
+  /* SVG: 파란색 반투명 원으로 변경 */
+  cursor:
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="yellow" opacity="0.5"/><line x1="32" y1="0" x2="32" y2="64" stroke="blue" stroke-width="4"/><line x1="0" y1="32" x2="64" y2="32" stroke="blue" stroke-width="4"/></svg>')
+      32 32,
+    pointer !important;
 }

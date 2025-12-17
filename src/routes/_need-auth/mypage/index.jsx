@@ -199,7 +199,10 @@ function RouteComponent() {
 
         <Tabs
           defaultValue={activeTab}
-          onValueChange={(value) => setActiveTab(value)}
+          onValueChange={(value) => {
+            setActiveTab(value);
+            navigate({ to: '/mypage/', search: { tab: value } });
+          }}
           className='mb-8 w-full'
         >
           <div className='md:flex md:gap-6'>
