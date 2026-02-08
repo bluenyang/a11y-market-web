@@ -1,44 +1,36 @@
 import js from '@eslint/js';
-import globals from 'globals';
+import query from '@tanstack/eslint-plugin-query';
+import prettier from 'eslint-config-prettier';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import { defineConfig, globalIgnores } from 'eslint/config';
-
-// Plugins for React linting
-import pluginReact from 'eslint-plugin-react';
-import pluginReactHooks from 'eslint-plugin-react-hooks';
-import pluginJsxA11y from 'eslint-plugin-jsx-a11y';
-import pluginImport from 'eslint-plugin-import';
-import pluginReactRefresh from 'eslint-plugin-react-refresh';
-
-// Prettier configuration for ESLint
-import prettierConfig from 'eslint-config-prettier';
-import eslintPluginJsxA11y from 'eslint-plugin-jsx-a11y';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   globalIgnores(['dist']),
   {
-    files: ['**/*.{js,jsx}'],
-    plugins: {
-      react: pluginReact,
-      'react-hooks': pluginReactHooks,
-      'jsx-a11y': pluginJsxA11y,
-      import: pluginImport,
-      'react-refresh': pluginReactRefresh,
-    },
+    files: ['**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
-      pluginReact.configs.flat.recommended,
-      pluginReactHooks.configs.recommended,
-      pluginJsxA11y.configs.recommended,
-      pluginImport.configs.recommended,
+      tseslint.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      reactRefresh.configs.vite,
+      query.configs.recommended,
     ],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module',
-      },
+    },
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+      react: react,
+      'jsx-a11y': jsxA11y,
+      'simple-import-sort': simpleImportSort,
     },
     settings: {
       react: {
@@ -46,11 +38,26 @@ export default defineConfig([
       },
     },
     rules: {
-      'react-refresh/only-export-components': 'error',
-      'no-unused-vars': 'warn',
-      'no-var': 'error',
-      'no-var-requires': 'off',
+      ...reactHooks.configs.recommended.rules,
+
+      // React Refresh rules
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+
+      // React rules
+      'react/react-in-jsx-scope': 'off',
+      'react/jsx-uses-react': 'off',
+
+      // Simple Import Sort rules
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+
+      // JSX Accessibility rules
+      ...jsxA11y.configs.recommended.rules,
+      'jsx-a11y/alt-text': 'error',
+      'jsx-a11y/aria-props': 'error',
+      'jsx-a11y/role-supports-aria-props': 'error',
+
+      ...prettier.rules,
     },
   },
-  prettierConfig,
 ]);
