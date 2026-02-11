@@ -8,11 +8,11 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
-import { a11yApi } from '@/api/a11y-api';
+import { useCreateA11yProfile } from '@/api/a11y/queries';
+import type { A11ySettings } from '@/api/a11y/types';
 import { Alert, AlertTitle } from '@/components/ui/alert';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
-import type { A11ySettings, UserA11yProfileAddRequest } from '@/types/a11y';
 import { AlertCircleIcon } from 'lucide-react';
 import { useState } from 'react';
 
@@ -45,7 +45,7 @@ export default function A11yOverlaySave({ open, onClose, a11yState }: A11yOverla
 
     setIsSubmitting(true);
 
-    const payload: UserA11yProfileAddRequest = {
+    await useCreateA11yProfile().mutateAsync({
       profileName: name.trim(),
       description: description.trim(),
       contrastLevel: a11yState.contrastLevel,
@@ -57,24 +57,7 @@ export default function A11yOverlaySave({ open, onClose, a11yState }: A11yOverla
       smartContrast: a11yState.smartContrast,
       highlightLinks: a11yState.highlightLinks,
       cursorHighlight: a11yState.cursorHighlight,
-    };
-
-    const status = await a11yApi.createA11yProfile(payload);
-
-    if (status === 201) {
-      setName('');
-      setDescription('');
-      onClose();
-      return;
-    }
-
-    if (status === 409) {
-      setErrors((prev) => ({ ...prev, name: '이미 존재하는 프로필 이름입니다.' }));
-    } else if (status === 400) {
-      setErrors((prev) => ({ ...prev, submit: '잘못된 요청입니다.' }));
-    } else {
-      setErrors((prev) => ({ ...prev, submit: '프로필 저장에 실패했습니다.' }));
-    }
+    });
 
     setIsSubmitting(false);
     return;

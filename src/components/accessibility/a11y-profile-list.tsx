@@ -1,6 +1,6 @@
+import type { UserA11yProfileResponse } from '@/api/a11y/types';
 import { Button } from '@/components/ui/button';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
-import type { UserA11yProfileResponse } from '@/types/a11y';
 
 interface A11yProfileListProps {
   profiles: UserA11yProfileResponse[];

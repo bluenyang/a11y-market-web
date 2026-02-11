@@ -1,3 +1,4 @@
+import type { A11ySettings } from '@/api/a11y/types';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -9,7 +10,6 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { A11Y_PROFILES } from '@/lib/a11y/profiles';
 import { useA11yActions, useA11yData } from '@/store/a11y-store';
-import type { A11ySettings } from '@/types/a11y';
 import {
   AArrowUp,
   AlignCenter,

@@ -1,4 +1,5 @@
-import { a11yApi } from '@/api/a11y-api';
+import { useCreateA11yProfile, useUpdateA11yProfile } from '@/api/a11y/queries';
+import type { A11ySettings, UserA11yProfileAddRequest } from '@/api/a11y/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,7 +15,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useA11yActions, useA11yData } from '@/store/a11y-store';
-import type { A11ySettings, UserA11yProfileAddRequest } from '@/types/a11y';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -86,10 +86,13 @@ export default function A11yEditModal({
     setSaveLoading(true);
 
     if (initialProfile) {
-      await a11yApi.updateA11yProfile({ profileId: initialProfile.profileId, data: payload });
+      await useUpdateA11yProfile().mutateAsync({
+        profileId: initialProfile.profileId,
+        data: payload,
+      });
       toast.success('프로필이 수정되었습니다.');
     } else {
-      await a11yApi.createA11yProfile(payload);
+      await useCreateA11yProfile().mutateAsync(payload);
       toast.success('새 접근성 프로필이 생성되었습니다.');
     }
 

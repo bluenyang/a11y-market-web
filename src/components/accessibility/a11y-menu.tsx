@@ -1,3 +1,4 @@
+import type { A11ySettings } from '@/api/a11y/types';
 import { A11yOptionCard } from '@/components/accessibility/a11y-option-card';
 import A11yOverlaySave from '@/components/accessibility/a11y-overlay-save';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,6 @@ import {
 } from '@/lib/a11y/a11yEnums';
 import { A11Y_PROFILES } from '@/lib/a11y/profiles';
 import { useA11yActions, useA11yData } from '@/store/a11y-store';
-import type { A11ySettings } from '@/types/a11y';
 import {
   AArrowUp,
   AlignCenter,
