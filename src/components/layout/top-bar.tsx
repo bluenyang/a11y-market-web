@@ -1,6 +1,7 @@
 // import { logout } from '@/store/slices/authSlice';
 import { useLogout } from '@/api/auth/mutations';
 import { useGetCategories } from '@/api/category/queries';
+import { useGetProfile } from '@/api/user/queries';
 import { CartBadge } from '@/components/cart/cart-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,6 @@ import {
 } from '@/components/ui/navigation-menu';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useUser } from '@/hooks/use-user';
 import { useAuthStore } from '@/store/auth-store';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { LogIn, LogOut, Menu, Search, ShoppingCart, User, UserPlus } from 'lucide-react';
@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react';
 export default function TopBar() {
   const { isAuthenticated } = useAuthStore();
   const { mutate: logout } = useLogout();
-  const { data: user } = useUser();
+  const { data: user } = useGetProfile();
   const { data: categories, isLoading } = useGetCategories();
 
   const navigate = useNavigate();
