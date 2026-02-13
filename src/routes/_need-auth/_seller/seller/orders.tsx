@@ -1,5 +1,6 @@
-// src/routes/_needAuth/seller/orders.jsx
-import { sellerApi } from '@/api/seller-api';
+import { sellerApi } from '@/api/seller';
+import { useOrderSummary, useReceivedOrders } from '@/api/seller/queries';
+import type { ReceivedOrder } from '@/api/seller/types';
 import { InfoRow, OrderSummaryCard } from '@/components/seller/order-summary-section';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,54 +50,42 @@ import { ClipboardClock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+export const Route = createFileRoute('/_need-auth/_seller/seller/orders')({
+  component: SellerOrdersPage,
+});
+
 function SellerOrdersPage() {
-  const [orderData, setOrderData] = useState([]);
+  const [orderData, setOrderData] = useState<ReceivedOrder[]>([]);
   const [statusFilter, setStatusFilter] = useState('all');
   const [totalOrderCount, setTotalOrderCount] = useState(0);
-  // const [openDateFrom, setOpenDateFrom] = useState(false);
-  // const [dateFrom, setDateFrom] = useState('');
-  // const [openDateTo, setOpenDateTo] = useState(false);
-  // const [dateTo, setDateTo] = useState('');
-  // const [keyword, setKeyword] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState<ReceivedOrder | null>(null);
   const [page, setPage] = useState(1);
-  const [orderSummary, setOrderSummary] = useState({
-    newOrders: 0,
-    acceptedOrders: 0,
-    shippingOrders: 0,
-    completedOrders: 0,
-    claimedOrders: 0,
-  });
 
   const navigate = useNavigate();
+  const { data: receivedOrders } = useReceivedOrders(
+    page - 1,
+    20,
+    statusFilter === 'all' ? null : statusFilter,
+  );
+  const { data: orderSummary } = useOrderSummary();
 
   useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await sellerApi.getReceivedOrders(
-          page - 1,
-          20,
-          statusFilter === 'all' ? null : statusFilter,
-        );
-        const { orderItems, totalOrderCount } = data;
+    if (!receivedOrders) return;
 
-        setTotalOrderCount(totalOrderCount);
-        setOrderData(orderItems);
+    const { orderItems, totalOrderCount: fetchedTotalOrderCount } = receivedOrders;
 
-        const summaryResp = await sellerApi.getOrderSummary();
-        setOrderSummary((prev) => ({ ...prev, ...summaryResp.data }));
-      } catch (err) {
-        console.error('Failed to fetch received orders:', err);
-      }
-    })();
+    setTotalOrderCount(fetchedTotalOrderCount);
+    setOrderData(orderItems);
   }, [page, statusFilter]);
 
-  const handleShippingSubmit = async (e) => {
+  const handleShippingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedOrder) return;
+
     try {
       const orderItemId = selectedOrder.orderItemId;
 
-      await sellerApi.updateOrderItemStatus(orderItemId, selectedOrder.orderItemStatus);
+      await sellerApi.updateOrderItemStatus(String(orderItemId), selectedOrder.orderItemStatus);
 
       // 상태 업데이트 후, 주문 데이터 업데이트
       setOrderData((prevOrders) =>
@@ -108,13 +97,13 @@ function SellerOrdersPage() {
       );
 
       toast.success('주문 상태가 성공적으로 업데이트되었습니다.');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update order item status:', error);
       toast.error(error.message || '주문 상태 업데이트에 실패했습니다.');
     }
   };
 
-  const getBadge = (status) => {
+  const getBadge = (status: string) => {
     return <Badge className={statusLabel(status).className}>{statusLabel(status).label}</Badge>;
   };
 
@@ -138,14 +127,6 @@ function SellerOrdersPage() {
           >
             대시보드로 돌아가기
           </Button>
-          {/* 관리 방법 보기 */}
-          {/* <Button
-            variant='outline'
-            className='font-kakao-little h-9 w-full px-4 text-base'
-            type='button'
-          >
-            관리 방법 보기
-          </Button> */}
         </div>
       </header>
 
@@ -153,27 +134,27 @@ function SellerOrdersPage() {
       <section className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'>
         <OrderSummaryCard
           label='신규 주문'
-          value={orderSummary.newOrders}
+          value={orderSummary?.newOrders ?? 0}
           description='주문접수 상태의 주문 수'
         />
         <OrderSummaryCard
           label='주문 접수됨'
-          value={orderSummary.acceptedOrders}
+          value={orderSummary?.acceptedOrders ?? 0}
           description='포장/출고 준비 중인 주문 수'
         />
         <OrderSummaryCard
           label='배송 중'
-          value={orderSummary.shippingOrders}
+          value={orderSummary?.shippingOrders ?? 0}
           description='택배사에 전달된 배송 건'
         />
         <OrderSummaryCard
           label='배송 완료'
-          value={orderSummary.completedOrders}
+          value={orderSummary?.completedOrders ?? 0}
           description='배송이 완료된 주문 수'
         />
         <OrderSummaryCard
           label='취소/반품 요청'
-          value={orderSummary.claimedOrders}
+          value={orderSummary?.claimedOrders ?? 0}
           description='배송이 완료된 주문 수'
         />
       </section>
@@ -220,113 +201,6 @@ function SellerOrdersPage() {
                   </SelectContent>
                 </Select>
               </Field>
-
-              {/* 기간(시작) */}
-              {/* <Field>
-                <div className='flex flex-col gap-3'>
-                  <FieldLabel
-                    htmlFor='date-from'
-                    className='px-1'
-                  >
-                    {'기간 설정 (시작)'}
-                  </FieldLabel>
-                  <Popover
-                    open={openDateFrom}
-                    onOpenChange={setOpenDateFrom}
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant='outline'
-                        id='date-from'
-                        className='w-48 justify-between font-normal'
-                      >
-                        {dateFrom ? dateFrom.toLocaleDateString() : 'Select date'}
-                        <ChevronDownIcon />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className='w-auto overflow-hidden p-0'
-                      align='start'
-                    >
-                      <Calendar
-                        mode='single'
-                        selected={dateFrom}
-                        captionLayout='dropdown'
-                        onSelect={(date) => {
-                          setDateFrom(date);
-                          setOpenDateFrom(false);
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </Field> */}
-
-              {/* 기간(종료) */}
-              {/* <Field>
-                <div className='flex flex-col gap-3'>
-                  <FieldLabel
-                    htmlFor='date-to'
-                    className='px-1'
-                  >
-                    {'기간 설정 (종료)'}
-                  </FieldLabel>
-                  <Popover
-                    open={openDateTo}
-                    onOpenChange={setOpenDateTo}
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant='outline'
-                        id='date-to'
-                        className='w-48 justify-between font-normal'
-                      >
-                        {dateTo ? dateTo.toLocaleDateString() : 'Select date'}
-                        <ChevronDownIcon />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent
-                      className='w-auto overflow-hidden p-0'
-                      align='start'
-                    >
-                      <Calendar
-                        mode='single'
-                        selected={dateTo}
-                        captionLayout='dropdown'
-                        onSelect={(date) => {
-                          setDateTo(date);
-                          setOpenDateTo(false);
-                        }}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </Field> */}
-
-              {/* 검색어 */}
-              {/* <Field>
-                <Label
-                  htmlFor='order-keyword'
-                  className='font-kakao-little text-xs font-medium'
-                >
-                  주문 검색
-                </Label>
-                <div className='mt-1 flex gap-2'>
-                  <Input
-                    id='order-keyword'
-                    placeholder='주문번호 / 주문자명 / 상품명'
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                    className='h-9 flex-1 text-sm'
-                  />
-                  <Button
-                    type='button'
-                    className='font-kakao-little h-9 px-4 text-xs text-slate-50 '
-                  >
-                    검색
-                  </Button>
-                </div>
-              </Field> */}
             </FieldGroup>
           </div>
         </CardHeader>
@@ -380,7 +254,7 @@ function SellerOrdersPage() {
                             {o.orderItemId}
                           </TableCell>
                           <TableCell className='px-4 py-2 text-center align-middle md:text-xs'>
-                            {new Date(o.orderedAt)?.toLocaleDateString('ko-KR')}
+                            {new Date(o.orderedAt).toLocaleDateString('ko-KR')}
                           </TableCell>
                           <TableCell className='px-4 py-2 text-center align-middle md:text-xs'>
                             {o.buyerName}
@@ -418,7 +292,7 @@ function SellerOrdersPage() {
           </div>
         </CardContent>
 
-        {/* 하단 Pagination – 아직 기능 없이 UI만 */}
+        {/* 하단 Pagination */}
         <CardFooter className='border-t px-4 py-3'>
           <div className='flex w-full items-center justify-between text-base md:text-xs'>
             <span>{`총 ${totalOrderCount}건 중 ${(page - 1) * 20 + 1}-${Math.min(page * 20, totalOrderCount)}건 표시`}</span>
@@ -451,7 +325,6 @@ function SellerOrdersPage() {
       </Card>
 
       {selectedOrder && (
-        // 하단: 주문 상세 + 배송 처리
         <section className='space-y-4'>
           {/* 섹션 헤더 */}
           <div className='flex flex-col gap-1 md:flex-row md:items-baseline md:justify-between'>
@@ -461,7 +334,6 @@ function SellerOrdersPage() {
             </p>
           </div>
 
-          {/* 좌: 주문 정보 / 우: 배송 처리 */}
           <div className='grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]'>
             {/* 왼쪽: 주문 기본 정보 카드 */}
             <Card>
@@ -473,7 +345,6 @@ function SellerOrdersPage() {
               </CardHeader>
 
               <CardContent className='space-y-4'>
-                {/* 주문 정보 박스 */}
                 <div className='space-y-2 rounded-lg border p-4'>
                   <InfoRow
                     label='주문번호'
@@ -505,7 +376,6 @@ function SellerOrdersPage() {
                   />
                 </div>
 
-                {/* 상태 요약 박스 */}
                 <div className='/60 flex items-center justify-between rounded-lg border px-4 py-3'>
                   <div className='space-y-0.5'>
                     <p className='font-kakao-little text-xs font-medium'>현재 주문 상태</p>
@@ -535,7 +405,6 @@ function SellerOrdersPage() {
                   onSubmit={handleShippingSubmit}
                 >
                   <FieldGroup className='grid gap-4'>
-                    {/* 배송 상태 */}
                     <Field>
                       <Label
                         htmlFor='shipping-status'
@@ -547,10 +416,14 @@ function SellerOrdersPage() {
                         value={selectedOrder?.orderItemStatus || ''}
                         disabled={selectedOrder?.orderItemStatus === 'CONFIRMED'}
                         onValueChange={(value) => {
-                          setSelectedOrder((prev) => ({
-                            ...prev,
-                            orderItemStatus: value,
-                          }));
+                          setSelectedOrder((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  orderItemStatus: value,
+                                }
+                              : null,
+                          );
                         }}
                       >
                         <SelectTrigger
@@ -599,7 +472,6 @@ function SellerOrdersPage() {
                     </Field>
                   </FieldGroup>
 
-                  {/* 버튼 */}
                   <div className='mt-3 flex flex-col gap-2'>
                     <Button
                       type='submit'
@@ -624,7 +496,3 @@ function SellerOrdersPage() {
     </main>
   );
 }
-
-export const Route = createFileRoute('/_need-auth/_seller/seller/orders')({
-  component: SellerOrdersPage,
-});

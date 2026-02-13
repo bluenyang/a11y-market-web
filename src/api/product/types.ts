@@ -7,23 +7,15 @@ export interface ProductImage {
 
 export interface ProductImageMetadata {
   originalFileName: string;
-  imageId: string;
-  imageSequence: number;
   altText: string;
+  sequence: number;
   isNew: boolean;
+  imageId?: string;
 }
 
-export interface ProductImageUpdateRequest {
-  request: {
-    productName: string;
-    productDescription: string;
-    categoryId: string;
-    productPrice: number;
-    productStock: number;
-    productStatus: ProductStatus;
-    imageMetadataList: ProductImageMetadata[];
-  };
-  iamges: File[];
+export interface ProductImageWithFile extends ProductImageMetadata {
+  previewUrl?: string;
+  file: File;
 }
 
 export interface SimpleProductInfo {
@@ -38,7 +30,16 @@ export interface SimpleProductInfo {
   salesCount: number;
 }
 
-export type ProductStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAUSED' | 'DELETED';
+export const EProductStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  PAUSED: 'PAUSED',
+  DELETED: 'DELETED',
+  SOLD_OUT: 'SOLD_OUT',
+} as const;
+
+export type ProductStatus = keyof typeof EProductStatus;
 
 export interface Product extends SimpleProductInfo {
   productDescription: string;
@@ -51,6 +52,7 @@ export interface Product extends SimpleProductInfo {
   summaryText?: string;
   usageContext?: string;
   usageMethod?: string;
+  approvedDate?: string;
 }
 
 export interface ProductSearchParams {

@@ -1,4 +1,7 @@
-import { sellerApi } from '@/api/seller-api';
+import { EProductStatus, type Product } from '@/api/product/types';
+import { useDeleteMyProduct } from '@/api/seller/mutations';
+import { useMyProducts } from '@/api/seller/queries';
+import { useGetProfile } from '@/api/user/queries';
 import { LoadingEmpty } from '@/components/main/loading-empty';
 import { UpdateStock } from '@/components/seller/products/update-stock';
 import {
@@ -17,41 +20,36 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 
-/** /seller/products : 판매자의 "내 상품 목록" 페이지 */
 export const Route = createFileRoute('/_need-auth/_seller/seller/products/')({
   component: SellerProductListPage,
 });
 
 function SellerProductListPage() {
   // hooks
-  const { isLoading } = useSelector((state) => state.auth);
-  const [products, setProducts] = useState([]);
+  const { isLoading } = useGetProfile();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const resp = await sellerApi.getMyProducts(0, 10);
-
-        setProducts(resp.data);
-      } catch (err) {
-        toast.error('내 상품 목록을 불러오는 중에 오류가 발생했습니다.');
-      }
-    })();
-  }, []);
+  const { data: products = [] } = useMyProducts(0, 10);
+  const { mutateAsync: deleteProduct } = useDeleteMyProduct();
 
   // variables
   const totalCount = products.length;
-  const activeCount = products.filter((product) => product.productStatus === 'APPROVED').length;
-  const pendingCount = products.filter((product) => product.productStatus === 'PENDING').length;
-  const deletedCount = products.filter((product) => product.productStatus === 'DELETED').length;
-  const pausedCount = products.filter((product) => product.productStatus === 'PAUSED').length;
+  const activeCount = products.filter(
+    (product) => product.productStatus === EProductStatus.APPROVED,
+  ).length;
+  const pendingCount = products.filter(
+    (product) => product.productStatus === EProductStatus.PENDING,
+  ).length;
+  const deletedCount = products.filter(
+    (product) => product.productStatus === EProductStatus.DELETED,
+  ).length;
+  const pausedCount = products.filter(
+    (product) => product.productStatus === EProductStatus.PAUSED,
+  ).length;
   const soldOutCount = products.filter((product) => product.productStock === 0).length;
-  const badgeColorMap = {
+  const badgeColorMap: Record<string, string> = {
     APPROVED: 'bg-blue-500',
     PENDING: 'bg-orange-500',
     PAUSED: 'bg-violet-500',
@@ -59,39 +57,29 @@ function SellerProductListPage() {
   };
 
   // handler functions
-  const handleProductDelete = async (productId) => {
-    try {
-      await sellerApi.deleteMyProduct(productId);
-      setProducts((prevProducts) =>
-        prevProducts.filter((product) => product.productId !== productId),
-      );
-      toast.success('상품이 성공적으로 삭제되었습니다.');
-    } catch (err) {
-      toast.error('상품 삭제 중에 오류가 발생했습니다.');
-    }
+  const handleProductDelete = async (productId: string) => {
+    await deleteProduct(productId);
+    toast.success('상품이 성공적으로 삭제되었습니다.');
   };
 
   // sub-components
   /** 상품 한 줄(row) 표시용 컴포넌트 */
-  function sellerProductRow({ product, key }) {
+  const SellerProductRow = ({ product }: { product: Product }) => {
     const formattedPrice = product.productPrice.toLocaleString('ko-KR');
 
-    const statusLabelMap = {
+    const statusLabelMap: Record<string, string> = {
       APPROVED: '판매 중',
       PENDING: '승인 대기',
       PAUSED: '판매 중지',
       DELETED: '삭제됨',
     };
 
-    const status = product.productStatus || 'APPROVED';
+    const status = product.productStatus || EProductStatus.APPROVED;
     const statusLabel = statusLabelMap[status] || status;
-    const isSoldOut = status === 'SOLD_OUT' || product.productStock === 0;
+    const isSoldOut = status === EProductStatus.SOLD_OUT || product.productStock === 0;
 
     return (
-      <div
-        key={key}
-        className='grid grid-cols-12 items-center px-4 py-3 text-sm'
-      >
+      <div className='grid grid-cols-12 items-center px-4 py-3 text-sm'>
         <div
           className='col-span-4 truncate'
           tabIndex={0}
@@ -103,9 +91,9 @@ function SellerProductListPage() {
             <div className='text-muted-foreground text-xs'>{product.categoryName}</div>
           )}
 
-          {product.approvedAt && (
+          {product.approvedDate && (
             <div className='text-muted-foreground text-xs'>
-              {`등록일: ${product.approvedAt.split('T')[0]}`}
+              {`등록일: ${typeof product.approvedDate === 'string' ? product.approvedDate.split('T')[0] : String(product.approvedDate)}`}
             </div>
           )}
         </div>
@@ -129,13 +117,6 @@ function SellerProductListPage() {
             currentStock={product.productStock}
             variant='outline'
             className='ml-2 px-2 py-1 text-xs'
-            onStockUpdate={(id, newStock) => {
-              setProducts((prevProducts) =>
-                prevProducts.map((p) =>
-                  p.productId === id ? { ...p, productStock: newStock } : p,
-                ),
-              );
-            }}
           />
         </div>
 
@@ -160,7 +141,7 @@ function SellerProductListPage() {
           >
             <Link
               to='/seller/products/$productId/edit'
-              params={{ productId: product.productId }}
+              params={{ productId: String(product.productId) }}
             >
               수정
             </Link>
@@ -215,7 +196,7 @@ function SellerProductListPage() {
         </div>
       </div>
     );
-  }
+  };
 
   // main render
   if (isLoading) {
@@ -358,7 +339,12 @@ function SellerProductListPage() {
 
         {products.length > 0 && (
           <div className='divide-y'>
-            {products.map((product, index) => sellerProductRow({ product, key: index }))}
+            {products.map((product) => (
+              <SellerProductRow
+                product={product}
+                key={product.productId}
+              />
+            ))}
           </div>
         )}
       </section>

@@ -1,6 +1,13 @@
 import axiosInstance from '@/api/axios-instance';
 import type { Product } from '@/api/product/types';
-import type { DailyRevenue, DashboardStats, OrderSummary, ReceivedOrdersResponse } from './types';
+import type {
+  DailyRevenue,
+  DashboardStats,
+  OrderSummary,
+  ProductRegisterRequest,
+  ProductUpdateRequest,
+  ReceivedOrdersResponse,
+} from './types';
 
 export const sellerApi = {
   getDashboardStats: async (): Promise<DashboardStats> => {
@@ -66,53 +73,39 @@ export const sellerApi = {
     await axiosInstance.patch(`/v1/seller/orders/${orderItemId}/status`, { status });
   },
 
-  registerProduct: async (
-    productData: any, // Typed as any for now, should be ProductRegisterRequest
-    images: { file?: File }[],
-  ): Promise<{ status: number }> => {
-    const formData = new FormData();
-    formData.append(
-      'product',
-      new Blob([JSON.stringify(productData)], { type: 'application/json' }),
-    );
-
-    images.forEach((img) => {
-      if (img.file) {
-        formData.append('images', img.file);
-      }
-    });
-
-    const { status } = await axiosInstance.post('/v1/seller/products', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
+  registerProduct: async (productData: ProductRegisterRequest): Promise<{ status: number }> => {
+    const { status } = await axiosInstance.post(
+      '/v1/seller/products',
+      {
+        request: productData.request,
+        images: productData.images,
       },
-    });
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    );
 
     return { status };
   },
 
   updateProduct: async (
     productId: string,
-    productData: any, // Should be ProductUpdateRequest
-    images: { file?: File }[],
+    productData: ProductUpdateRequest,
   ): Promise<{ status: number }> => {
-    const formData = new FormData();
-    formData.append(
-      'product',
-      new Blob([JSON.stringify(productData)], { type: 'application/json' }),
-    );
-
-    images.forEach((img) => {
-      if (img.file) {
-        formData.append('images', img.file);
-      }
-    });
-
-    const { status } = await axiosInstance.put(`/v1/seller/products/${productId}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
+    const { status } = await axiosInstance.put(
+      `/v1/seller/products/${productId}`,
+      {
+        request: productData.request,
+        images: productData.images,
       },
-    });
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    );
 
     return { status };
   },

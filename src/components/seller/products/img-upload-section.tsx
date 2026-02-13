@@ -1,3 +1,4 @@
+import type { ProductImageWithFile } from '@/api/product/types';
 import { ImageWithFallback } from '@/components/image-with-fallback';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,18 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Star, Upload, X } from 'lucide-react';
 
-export interface UploadImage {
-  file?: File;
-  originalFileName?: string;
-  altText: string;
-  sequence: number;
-  imageUrl?: string;
-  imageId?: string;
-}
-
 interface ImageUploadSectionProps {
-  images: UploadImage[];
-  onImagesChange: (images: UploadImage[]) => void;
+  images: ProductImageWithFile[];
+  onImagesChange: (images: ProductImageWithFile[]) => void;
   sectionType: 'product' | 'detail';
   disabled?: boolean;
 }
@@ -30,6 +22,7 @@ export function ImageUploadSection({
 }: ImageUploadSectionProps) {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
+
     const files = Array.from(e.target.files);
     const startSequence = sectionType === 'product' ? 0 : 10;
     const existingCount = images.filter((img) =>
@@ -37,10 +30,11 @@ export function ImageUploadSection({
     ).length;
 
     const newImages = files.map((file, index) => ({
-      file,
       originalFileName: file.name,
       altText: '',
       sequence: startSequence + existingCount + index,
+      isNew: true,
+      file,
     }));
 
     onImagesChange([...images, ...newImages]);
@@ -66,6 +60,14 @@ export function ImageUploadSection({
       return img;
     });
     onImagesChange(updated);
+  };
+
+  const getImageUrl = (image: ProductImageWithFile) => {
+    if (image.previewUrl) {
+      return image.previewUrl;
+    } else {
+      return URL.createObjectURL(image.file);
+    }
   };
 
   const sectionImages = images
@@ -143,7 +145,7 @@ export function ImageUploadSection({
                 <div className='space-y-3'>
                   <div className='relative aspect-video overflow-hidden rounded-md bg-gray-100'>
                     <ImageWithFallback
-                      src={image.imageUrl || ''}
+                      src={getImageUrl(image)}
                       alt={
                         image.altText ||
                         `${sectionType === 'product' ? '상품' : '상세'} 사진 ${image.sequence + 1}`

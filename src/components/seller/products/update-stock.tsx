@@ -1,4 +1,4 @@
-import { sellerApi } from '@/api/seller';
+import { useUpdateProductStock } from '@/api/seller/mutations';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -32,23 +32,18 @@ interface UpdateStockProps {
   className?: string;
 }
 
-export const UpdateStock = ({
-  productId,
-  currentStock,
-  onStockUpdate,
-  variant,
-  className,
-}: UpdateStockProps) => {
+export const UpdateStock = ({ productId, currentStock, variant, className }: UpdateStockProps) => {
   const [newStock, setNewStock] = useState(currentStock);
   const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const { mutateAsync: updateProductStock } = useUpdateProductStock();
+
   const handleStockUpdate = async () => {
     setLoading(true);
     try {
-      await sellerApi.updateProductStock(productId, newStock);
+      await updateProductStock({ productId, newStock });
 
-      onStockUpdate && onStockUpdate(productId, newStock);
       toast.success('재고가 성공적으로 업데이트되었습니다.');
       setIsSuccess(true);
     } catch (err: any) {

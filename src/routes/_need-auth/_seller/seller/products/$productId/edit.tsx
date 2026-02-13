@@ -1,6 +1,8 @@
-// src/routes/_needAuth/seller/products/$productId/edit.jsx
-import { productApi } from '@/api/product-api';
-import { sellerApi } from '@/api/seller-api';
+import { useGetCategories } from '@/api/category/queries';
+import { useGetProductDetails } from '@/api/product/queries';
+import type { ProductImageMetadata, ProductImageWithFile } from '@/api/product/types';
+import { useUpdateProduct } from '@/api/seller/mutations';
+import type { ProductUpdateRequest } from '@/api/seller/types';
 import { ImageUploadSection } from '@/components/seller/products/img-upload-section';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -21,62 +23,44 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { AlertCircleIcon, Archive, DollarSign, Image, Package } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { AlertCircleIcon, Archive, DollarSign, Image as ImageIcon, Package } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
+export const Route = createFileRoute('/_need-auth/_seller/seller/products/$productId/edit')({
+  component: SellerProductEditPage,
+});
 
 function SellerProductEditPage() {
   // hooks
   const { productId } = Route.useParams();
-  const { categories } = useSelector((state) => state.category);
+  const { data: categories = [] } = useGetCategories();
   const navigate = useNavigate();
 
-  // 실제로는 서버에서 불러와서 초기값 세팅
-  const [images, setImages] = useState([]);
-  const [formData, setFormData] = useState({
-    productName: '',
-    productDescription: '',
-    categoryId: '',
-    productPrice: 0,
-    productStock: 0,
-    productStatus: 'APPROVED',
+  const {
+    data: product = {
+      productName: '',
+      productDescription: '',
+      categoryId: '',
+      productPrice: 0,
+      productStock: 0,
+      productStatus: 'APPROVED',
+    },
+  } = useGetProductDetails(productId);
+  const { mutateAsync: updateProduct } = useUpdateProduct();
+
+  const [images, setImages] = useState<ProductImageWithFile[]>([]);
+  const [formData, setFormData] = useState<ProductUpdateRequest['request']>({
+    productName: product.productName,
+    productDescription: product.productDescription,
+    categoryId: product.categoryId,
+    productPrice: product.productPrice,
+    productStock: product.productStock,
+    productStatus: product.productStatus,
+    imageMetadataList: [],
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const resp = await productApi.getProductDetails(productId);
-
-        setFormData({
-          productName: resp.data.productName,
-          productDescription: resp.data.productDescription,
-          categoryId: resp.data.categoryId,
-          productPrice: resp.data.productPrice,
-          productStock: resp.data.productStock,
-          productStatus:
-            resp.data.productStatus === 'PENDING' ? 'APPROVED' : resp.data.productStatus,
-        });
-
-        setImages(
-          resp.data.productImages.map((img) => {
-            return {
-              imageId: img.imageId,
-              file: null,
-              originalFileName: null,
-              altText: img.altText || '',
-              sequence: img.imageSequence,
-              preview: img.imageUrl,
-            };
-          }),
-        );
-      } catch (err) {
-        toast.error('상품 정보를 불러오는 중에 오류가 발생했습니다.');
-      }
-    })();
-  }, []);
 
   // variables and constants
   const statusOptions = [
@@ -105,7 +89,7 @@ function SellerProductEditPage() {
 
   // helper functions
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: Record<string, string> = {};
     if (!formData.productName) {
       newErrors.productName = '상품명을 입력해주세요.';
     }
@@ -141,7 +125,7 @@ function SellerProductEditPage() {
   };
 
   // handlers
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     // 에러 클리어
@@ -150,14 +134,14 @@ function SellerProductEditPage() {
     }
   };
 
-  const handleStatusChange = (value) => {
+  const handleStatusChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
-      productStatus: value,
+      productStatus: value === 'APPROVED' ? 'APPROVED' : 'PENDING',
     }));
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.SubmitEvent) => {
     event.preventDefault();
     setIsSubmitting(true);
 
@@ -170,20 +154,23 @@ function SellerProductEditPage() {
     }
 
     try {
-      const imageMetadataList = images.map((img) => ({
-        imageId: img.imageId || null,
+      const imageMetadataList: ProductImageMetadata[] = images.map((img) => ({
+        originalFileName: img.originalFileName || '',
+        imageId: img.imageId || '',
         sequence: img.sequence,
         altText: img.altText || '',
-        originalFileName: img.file ? img.file.name : null,
-        isNew: !!img.file,
+        isNew: img.isNew || false,
       }));
 
-      const submitData = {
-        ...formData,
-        imageMetadataList: imageMetadataList,
+      const submitData: ProductUpdateRequest = {
+        request: {
+          ...formData,
+          imageMetadataList: imageMetadataList,
+        },
+        images: images.map((img) => img.file).filter((file) => file !== undefined),
       };
 
-      await sellerApi.updateProduct(productId, submitData, images);
+      await updateProduct({ productId, productData: submitData });
       toast.success('상품이 성공적으로 수정되었습니다.');
 
       navigate({
@@ -316,12 +303,12 @@ function SellerProductEditPage() {
                                 <SelectValue placeholder='카테고리 선택' />
                               </SelectTrigger>
                               <SelectContent>
-                                {categories.map((category) => (
+                                {categories.map((category: any) => (
                                   <SelectGroup key={category.categoryId}>
                                     <SelectLabel>{category.categoryName}</SelectLabel>
-                                    {category.subCategories.map((subCategory) => (
+                                    {category.subCategories.map((subCategory: any) => (
                                       <SelectItem
-                                        value={subCategory.categoryId}
+                                        value={String(subCategory.categoryId)}
                                         key={subCategory.categoryId}
                                       >
                                         {subCategory.categoryName}
@@ -476,7 +463,7 @@ function SellerProductEditPage() {
                     <Card>
                       <CardHeader>
                         <CardTitle className='flex items-center gap-2'>
-                          <Image className='h-5 w-5' />
+                          <ImageIcon className='h-5 w-5' />
                           상품 사진
                         </CardTitle>
                         <p className='mt-2 text-sm text-gray-500'>
@@ -513,7 +500,7 @@ function SellerProductEditPage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className='flex items-center gap-2'>
-                        <Image className='h-5 w-5' />
+                        <ImageIcon className='h-5 w-5' />
                         상세 정보 사진
                       </CardTitle>
                       <p className='mt-2 text-sm text-gray-500'>
@@ -594,8 +581,3 @@ function SellerProductEditPage() {
     </main>
   );
 }
-
-// TanStack Router – /seller/products/:productId/edit 경로
-export const Route = createFileRoute('/_need-auth/_seller/seller/products/$productId/edit')({
-  component: SellerProductEditPage,
-});

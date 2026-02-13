@@ -1,5 +1,5 @@
 import type { OrderItem } from '@/api/order/types';
-import type { Product } from '../product/types';
+import type { Product, ProductImageMetadata, ProductStatus } from '../product/types';
 
 export const ESellerSubmitStatus = {
   PENDING: 'PENDING',
@@ -76,4 +76,29 @@ export interface SellerDetail extends Seller {
   lastUpdatedDate: string;
   orders: OrderItem[];
   products: Product[];
+}
+
+export interface ProductRegisterRequest {
+  request: {
+    productName: string;
+    productDescription: string;
+    categoryId: string;
+    productPrice: number;
+    productStock: number;
+    imageMetadataList: ProductImageMetadata[];
+  };
+  images: File[];
+}
+
+export interface ProductUpdateRequest {
+  request: {
+    productName: string;
+    productDescription: string;
+    categoryId: string;
+    productPrice: number;
+    productStock: number;
+    productStatus: ProductStatus;
+    imageMetadataList: ProductImageMetadata[];
+  };
+  images: File[];
 }

@@ -1,4 +1,6 @@
-import { sellerApi } from '@/api/seller-api';
+import { useGetCategories } from '@/api/category/queries';
+import type { ProductImageMetadata, ProductImageWithFile } from '@/api/product/types';
+import { useRegisterProduct } from '@/api/seller/mutations';
 import { ImageUploadSection } from '@/components/seller/products/img-upload-section';
 import {
   AlertDialog,
@@ -29,9 +31,8 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { Icon } from '@iconify/react';
 import { createFileRoute } from '@tanstack/react-router';
-import { Archive, Image, Package } from 'lucide-react';
+import { Archive, Image as ImageIcon, Package } from 'lucide-react';
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_need-auth/_seller/seller/products/new')({
@@ -47,14 +48,16 @@ function RouteComponent() {
     productStock: '',
   });
 
-  const { categories } = useSelector((state) => state.category);
+  const { data: categories = [] } = useGetCategories();
+  const { mutateAsync: registerProduct } = useRegisterProduct();
 
-  const [images, setImages] = useState([]);
-  const [errors, setErrors] = useState({});
+  const [imagesMetadata, setImagesMetadata] = useState<ProductImageMetadata[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     // 에러 클리어
@@ -63,8 +66,13 @@ function RouteComponent() {
     }
   };
 
+  const handleUpdateImages = (data: ProductImageWithFile[]) => {
+    setImagesMetadata(data);
+    setImageFiles(data.map((img) => img.file));
+  };
+
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.productName.trim()) {
       newErrors.productName = '상품명을 입력해주세요.';
@@ -78,22 +86,24 @@ function RouteComponent() {
       newErrors.categoryId = '카테고리를 선택해주세요.';
     }
 
-    if (!formData.productPrice || formData.productPrice <= 0) {
+    if (!formData.productPrice || Number(formData.productPrice) <= 0) {
       newErrors.productPrice = '올바른 가격을 입력해주세요.';
     }
 
-    if (!formData.productStock || formData.productStock < 0) {
+    if (!formData.productStock || Number(formData.productStock) < 0) {
       newErrors.productStock = '올바른 재고를 입력해주세요.';
     }
 
     // 이미지 검증
-    const productImages = images.filter((img) => img.sequence < 10);
+    const productImages = imagesMetadata.filter((img) => img.sequence < 10);
     if (productImages.length === 0) {
       newErrors.images = '최소 1개의 상품 사진을 업로드해주세요.';
     }
 
     // 대체 텍스트 검증
-    const imagesWithoutAlt = images.filter((img) => !img.altText.trim() && img.sequence < 10);
+    const imagesWithoutAlt = imagesMetadata.filter(
+      (img) => !img.altText.trim() && img.sequence < 10,
+    );
     if (imagesWithoutAlt.length > 0) {
       newErrors.imageAlt = '모든 사진에 대체 텍스트를 입력해주세요.';
     }
@@ -102,7 +112,7 @@ function RouteComponent() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -124,17 +134,18 @@ function RouteComponent() {
       categoryId: formData.categoryId,
       productPrice: parseInt(formData.productPrice),
       productStock: parseInt(formData.productStock),
-      imageMetadataList: images.map((img) => ({
+      imageMetadataList: imagesMetadata.map((img) => ({
         originalFileName: img.originalFileName,
         altText: img.altText,
         sequence: img.sequence,
+        isNew: img.isNew,
       })),
     };
 
     try {
-      const resp = await sellerApi.registerProduct(submitData, images);
+      const resp = await registerProduct({ request: submitData, images: imageFiles });
 
-      if (resp.status === 201) {
+      if (resp.status === 201 || resp.status === 200) {
         toast.success('상품이 성공적으로 등록 신청되었습니다!');
         // 폼 초기화
         setFormData({
@@ -144,7 +155,8 @@ function RouteComponent() {
           productPrice: '',
           productStock: '',
         });
-        setImages([]);
+        setImagesMetadata([]);
+        setImageFiles([]);
         setErrors({});
       } else {
         toast.error('상품 등록 신청에 실패했습니다. 다시 시도해주세요.');
@@ -154,6 +166,25 @@ function RouteComponent() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const combineMetadata = (
+    metaData: ProductImageMetadata[],
+    files: File[],
+  ): ProductImageWithFile[] => {
+    const list: ProductImageWithFile[] = [];
+
+    metaData.forEach((img) => {
+      const file = files.find((file) => file.name === img.originalFileName);
+      if (file) {
+        list.push({
+          ...img,
+          file,
+        });
+      }
+    });
+
+    return list;
   };
 
   return (
@@ -244,12 +275,12 @@ function RouteComponent() {
                         <SelectValue placeholder='카테고리 선택' />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((category) => (
+                        {categories.map((category: any) => (
                           <SelectGroup key={category.categoryId}>
                             <SelectLabel>{category.categoryName}</SelectLabel>
-                            {category.subCategories.map((subCategory) => (
+                            {category.subCategories.map((subCategory: any) => (
                               <SelectItem
-                                value={subCategory.categoryId}
+                                value={String(subCategory.categoryId)}
                                 key={subCategory.categoryId}
                               >
                                 {subCategory.categoryName}
@@ -403,7 +434,7 @@ function RouteComponent() {
             <Card>
               <CardHeader>
                 <CardTitle className='flex items-center gap-2'>
-                  <Image className='h-5 w-5' />
+                  <ImageIcon className='h-5 w-5' />
                   상품 사진
                 </CardTitle>
                 <p className='text-sm text-red-700'>
@@ -415,8 +446,8 @@ function RouteComponent() {
               </CardHeader>
               <CardContent>
                 <ImageUploadSection
-                  images={images}
-                  onImagesChange={setImages}
+                  images={combineMetadata(imagesMetadata, imageFiles)}
+                  onImagesChange={handleUpdateImages}
                   sectionType='product'
                 />
                 {errors.images && (
@@ -435,7 +466,7 @@ function RouteComponent() {
           <Card>
             <CardHeader>
               <CardTitle className='flex items-center gap-2'>
-                <Image className='h-5 w-5' />
+                <ImageIcon className='h-5 w-5' />
                 상세 정보 사진
               </CardTitle>
               <p className='mt-2 text-sm text-gray-500'>
@@ -444,8 +475,8 @@ function RouteComponent() {
             </CardHeader>
             <CardContent>
               <ImageUploadSection
-                images={images}
-                onImagesChange={setImages}
+                images={combineMetadata(imagesMetadata, imageFiles)}
+                onImagesChange={handleUpdateImages}
                 sectionType='detail'
                 disabled={isSubmitting}
               />
@@ -507,7 +538,7 @@ function RouteComponent() {
                         productPrice: '',
                         productStock: '',
                       });
-                      setImages([]);
+                      setImagesMetadata([]);
                       setErrors({});
                     }}
                     disabled={isSubmitting}

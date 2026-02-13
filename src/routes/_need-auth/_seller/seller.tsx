@@ -1,20 +1,23 @@
+import { useGetProfile } from '@/api/user/queries';
 import { ROLES } from '@/constants/roles';
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router';
-import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_need-auth/_seller/seller')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { user } = useSelector((state) => state.auth);
+  const { data: user } = useGetProfile();
   const navigate = useNavigate();
 
-  if (user?.userRole !== ROLES.SELLER) {
-    navigate({
-      to: '/unauthorized',
-    });
-  }
+  useEffect(() => {
+    if (user && user.userRole !== ROLES.SELLER) {
+      navigate({
+        to: '/unauthorized',
+      });
+    }
+  }, [user, navigate]);
 
   return <Outlet />;
 }
