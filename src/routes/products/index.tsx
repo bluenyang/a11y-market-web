@@ -11,8 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useProductFilterStore } from '@/store/product-filter-store';
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 interface ProductSearch {
   searchQuery?: string;
@@ -43,22 +44,20 @@ function RouteComponent() {
   // URL 검색 매개변수
   const { searchQuery, categoryId, isA11yGuaranteed, sellerGrade } = Route.useSearch();
 
-  const [filters, setFilters] = useState({
-    searchQuery: searchQuery || '',
-    categories: categoryId || '',
-    isA11yGuaranteed: isA11yGuaranteed || false,
-    sellerGrade: sellerGrade || '',
-  });
-  const [sortBy, setSortBy] = useState('on-development');
+  const [filters, setFilters] = [
+    useProductFilterStore((state) => state.filters),
+    useProductFilterStore((state) => state.setFilters),
+  ];
+  const [sortBy, setSortBy] = [
+    useProductFilterStore((state) => state.sortBy),
+    useProductFilterStore((state) => state.setSortBy),
+  ];
 
   const { data: allCategories = [] } = useGetCategories();
-  const { data: products, isLoading } = useGetProducts({
-    keyword: searchQuery,
-    category: categoryId,
-  });
+  const { data: products, isLoading } = useGetProducts();
 
   useEffect(() => {
-    let targetCategories: string[] = [];
+    let targetCategories: string | string[] = [];
 
     if (categoryId) {
       const parentCategory = allCategories.find((cat) => cat.categoryId === categoryId);
@@ -74,11 +73,11 @@ function RouteComponent() {
 
     setFilters({
       searchQuery: searchQuery || '',
-      categories: targetCategories,
+      categories: targetCategories.length > 0 ? targetCategories : '',
       isA11yGuaranteed: isA11yGuaranteed || false,
       sellerGrade: sellerGrade || '',
     });
-  }, [searchQuery, categoryId, isA11yGuaranteed, sellerGrade, allCategories]);
+  }, [searchQuery, categoryId, isA11yGuaranteed, sellerGrade, allCategories, setFilters]);
 
   const filteredProducts = products?.content || [];
 
@@ -108,8 +107,27 @@ function RouteComponent() {
           <aside className='mb-6 lg:mb-0'>
             {/* setFilters가 호출되면 필터가 변경되어 useEffect가 실행되고, 서버에서 필터링된 데이터를 받아옴 */}
             <ProductFilter
-              filters={filters}
-              setFilters={setFilters}
+              filters={{
+                ...filters,
+                categories: Array.isArray(filters.categories)
+                  ? filters.categories
+                  : filters.categories
+                    ? [filters.categories]
+                    : [],
+              }}
+              setFilters={(action) => {
+                if (typeof action === 'function') {
+                  const currentCategoryArray = Array.isArray(filters.categories)
+                    ? filters.categories
+                    : filters.categories
+                      ? [filters.categories]
+                      : [];
+                  const resolved = action({ ...filters, categories: currentCategoryArray });
+                  setFilters(resolved);
+                } else {
+                  setFilters(action);
+                }
+              }}
             />
           </aside>
 
@@ -160,14 +178,7 @@ function RouteComponent() {
                     <p className='mb-4'>검색 조건에 맞는 상품이 없습니다.</p>
                     <Button
                       variant='outline'
-                      onClick={() =>
-                        setFilters({
-                          searchQuery: '',
-                          categories: [],
-                          isA11yGuaranteed: false,
-                          sellerGrade: '',
-                        })
-                      }
+                      onClick={() => useProductFilterStore.getState().resetFilters()}
                     >
                       필터 초기화
                     </Button>
